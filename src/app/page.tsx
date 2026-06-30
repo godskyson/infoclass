@@ -142,7 +142,7 @@ export default function Home() {
               <span>실시간 자동 저장 및 제출 관리</span>
             </div>
           </div>
-          <div>&copy; {new Date().getFullYear()} 뜸부기 수행평가 모니터링 시스템. All rights reserved.</div>
+          <div>&copy; 2026 대영중학교 정보 수업 수행평가. All rights reserved.</div>
         </div>
       </footer>
     </div>

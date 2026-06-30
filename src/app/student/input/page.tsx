@@ -528,7 +528,7 @@ export default function StudentInputPage() {
 
       {/* 하단 푸터 */}
       <footer className="w-full border-t border-slate-200/80 py-4 bg-white/40 text-center text-xs text-slate-400">
-        &copy; {new Date().getFullYear()} 수행평가 모니터링 시스템. All rights reserved.
+        &copy; 2026 대영중학교 정보 수업 수행평가. All rights reserved.
       </footer>
     </div>
   );
