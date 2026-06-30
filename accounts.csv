@@ -1,0 +1,26 @@
+구분,이름/역할,학번/아이디,비밀번호/접속방식,접속 주소 (URL)
+관리자,감독관(선생님),admin,admin1234 (인증 생략 설정됨),http://localhost:3000/admin
+학생,김민준,30101,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,이서연,30102,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,박예준,30103,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,최지우,30104,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,정도윤,30105,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,강윤아,30106,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,조준우,30107,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,윤서현,30108,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,장도현,30109,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,임지민,30110,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,한주원,30111,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,오민서,30112,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,서우진,30113,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,신하은,30114,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,권민서,30115,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,황현우,30116,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,송지아,30117,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,안준혁,30118,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,전하윤,30119,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,홍길동,30120,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,유재석,30121,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,강호동,30122,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,신동엽,30123,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
+학생,이경규,30124,좌석선택 + 학번 + 이름 로그인,http://localhost:3000/student/login
