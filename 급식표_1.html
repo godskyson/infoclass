@@ -45,7 +45,10 @@
   h1 .dot{color:var(--accent-deep)}
   .school{color:var(--muted);font-size:14px;line-height:1.4;margin-top:5px}
 
-  .nav{display:flex;align-items:center;gap:8px}
+  .nav{
+    display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+    margin-top:20px;padding-top:18px;border-top:2px dotted var(--line);
+  }
   button{
     font-family:inherit;font-size:15px;line-height:1.2;font-weight:400;
     color:var(--text);background:var(--panel);border:2px solid var(--line);
@@ -54,15 +57,9 @@
   }
   button:hover{border-color:var(--accent);color:var(--accent-deep);transform:translateY(-1px)}
   button:active{transform:translateY(1px);box-shadow:none}
-  .range{font-size:15px;color:var(--muted);min-width:175px;text-align:center;line-height:1.2;white-space:nowrap}
   button{white-space:nowrap}
-  .short{display:none}
-
-  .tabs{display:flex;gap:8px;margin:0 0 18px}
-  .tabs button{padding:7px 18px}
-  .tabs button[aria-selected="true"]{
-    background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;
-  }
+  .nav #thisweek{background:var(--accent);border-color:var(--accent);color:#fff}
+  .nav #thisweek:hover{background:var(--accent-deep);border-color:var(--accent-deep);color:#fff}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:16px}
   .card{
@@ -102,13 +99,8 @@
     header{flex-direction:column;align-items:stretch;gap:10px;margin-bottom:14px}
     h1{font-size:21px}
     .school{font-size:12px;margin-top:3px}
-    .nav{gap:6px}
-    .nav button{font-size:13px;padding:7px 11px;flex:0 0 auto}
-    .range{font-size:13px;min-width:0;flex:1}
-    .lbl{display:none}
-    .short{display:inline}
-    .tabs{margin-bottom:12px}
-    .tabs button{font-size:13px;padding:6px 14px}
+    .nav{gap:7px;margin-top:16px;padding-top:14px}
+    .nav button{font-size:13px;padding:8px 13px}
 
     .grid{grid-template-columns:1fr;gap:9px}
 
@@ -147,15 +139,8 @@
       <h1>이번주 급식 식단표<span class="dot">.</span></h1>
       <div class="school" id="school">불러오는 중…</div>
     </div>
-    <div class="nav">
-      <button id="prev">←<span class="lbl"> 지난주</span></button>
-      <span class="range" id="range"></span>
-      <button id="next"><span class="lbl">다음주 </span>→</button>
-      <button id="thisweek"><span class="lbl">이번주</span><span class="short">오늘</span></button>
-    </div>
   </header>
 
-  <div class="tabs" id="tabs"></div>
   <div id="content"><div class="state">식단을 불러오는 중…</div></div>
 
   <div class="foot">
@@ -168,6 +153,12 @@
     </details>
     <div style="margin-top:6px">자료 출처 : <b>나이스 교육정보 개방 포털</b> 급식식단정보 API</div>
   </div>
+
+  <nav class="nav">
+    <button id="prev">← 지난주</button>
+    <button id="thisweek">이번주</button>
+    <button id="next">다음주 →</button>
+  </nav>
 </div>
 
 <script>
@@ -241,23 +232,13 @@ function render(rows){
   rows.forEach(r => { (byMeal[r.MMEAL_SC_CODE] ||= {})[r.MLSV_YMD] = r; });
 
   const any = rows[0];
+  const range = `${fmt(ymd(days[0]))} ~ ${fmt(ymd(days[6]))}`;
   document.getElementById('school').textContent =
-    any ? `${any.SCHUL_NM} · ${MEAL_NAMES[currentMeal]||''} 식단` : '식단 정보';
+    any ? `${any.SCHUL_NM} · ${range}` : range;
 
-  document.getElementById('range').textContent = `${fmt(ymd(days[0]))} ~ ${fmt(ymd(days[6]))}`;
-
+  // 급식 종류가 여러 개면 중식 우선, 중식이 없으면 있는 것 중 첫 번째
   const codes = Object.keys(byMeal).sort();
-  const tabs = document.getElementById('tabs');
-  tabs.innerHTML = '';
-  const shown = codes.length ? codes : ['2'];
-  if(!shown.includes(currentMeal)) currentMeal = shown.includes('2') ? '2' : shown[0];
-  shown.forEach(c => {
-    const b = document.createElement('button');
-    b.textContent = MEAL_NAMES[c] || c;
-    b.setAttribute('aria-selected', c === currentMeal);
-    b.onclick = () => { currentMeal = c; render(rows); };
-    tabs.appendChild(b);
-  });
+  if(codes.length && !codes.includes(currentMeal)) currentMeal = codes[0];
 
   const data = byMeal[currentMeal] || {};
   const list = days.filter((d,i) => i < 5 || data[ymd(d)]);
@@ -292,8 +273,8 @@ async function load(){
     const rows = await fetchWeek(weekOffset);
     render(rows);
   }catch(e){
-    document.getElementById('range').textContent =
-      `${fmt(ymd(weekDays(weekOffset)[0]))} ~ ${fmt(ymd(weekDays(weekOffset)[6]))}`;
+    const d = weekDays(weekOffset);
+    document.getElementById('school').textContent = `${fmt(ymd(d[0]))} ~ ${fmt(ymd(d[6]))}`;
     document.getElementById('content').innerHTML =
       `<div class="err"><b>식단을 불러오지 못했습니다.</b><br>${e.message}<br><br>
        인터넷 연결 또는 나이스 API 상태를 확인해 주세요. 브라우저에서 직접 이 파일을 열어야 정상 동작합니다.</div>`;
