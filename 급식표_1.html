@@ -54,7 +54,9 @@
   }
   button:hover{border-color:var(--accent);color:var(--accent-deep);transform:translateY(-1px)}
   button:active{transform:translateY(1px);box-shadow:none}
-  .range{font-size:15px;color:var(--muted);min-width:175px;text-align:center;line-height:1.2}
+  .range{font-size:15px;color:var(--muted);min-width:175px;text-align:center;line-height:1.2;white-space:nowrap}
+  button{white-space:nowrap}
+  .short{display:none}
 
   .tabs{display:flex;gap:8px;margin:0 0 18px}
   .tabs button{padding:7px 18px}
@@ -93,6 +95,49 @@
   details summary::marker{color:var(--accent)}
   .state{padding:50px 0;text-align:center;color:var(--muted);font-size:17px}
   .err{background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:20px;color:var(--muted);font-size:14px;line-height:1.7}
+
+  /* ── 좁은 화면 · Notion 임베드용 : 오늘 급식 먼저, 나머지는 한 줄씩 ── */
+  @media (max-width:560px){
+    .wrap{padding:16px 14px 28px}
+    header{flex-direction:column;align-items:stretch;gap:10px;margin-bottom:14px}
+    h1{font-size:21px}
+    .school{font-size:12px;margin-top:3px}
+    .nav{gap:6px}
+    .nav button{font-size:13px;padding:7px 11px;flex:0 0 auto}
+    .range{font-size:13px;min-width:0;flex:1}
+    .lbl{display:none}
+    .short{display:inline}
+    .tabs{margin-bottom:12px}
+    .tabs button{font-size:13px;padding:6px 14px}
+
+    .grid{grid-template-columns:1fr;gap:9px}
+
+    /* 나머지 날짜 : 납작한 한 줄 카드 */
+    .card{order:2;min-height:0;border-radius:16px;padding:12px 14px 11px}
+    .card::before{height:5px}
+    .card .day{margin:2px 0 7px;padding-bottom:6px}
+    .card .day .d{font-size:16px}
+    .card .day .w{font-size:12px}
+    .card .menu{gap:2px}
+    .card .menu li{font-size:13px;line-height:1.4}
+    .card .alg{font-size:10px;padding:1px 5px}
+    .card .kcal{margin-top:7px;font-size:11px}
+
+    /* 오늘 급식 : 맨 위에 크게 */
+    .card.today{order:-1;border-radius:22px;padding:18px 18px 16px;border-width:3px}
+    .card.today::before{height:9px}
+    .card.today .day{margin:4px 0 12px;padding-bottom:10px}
+    .card.today .day .d{font-size:26px}
+    .card.today .day .w{font-size:16px}
+    .card.today .badge{font-size:12px;padding:5px 12px}
+    .card.today .menu{gap:6px}
+    .card.today .menu li{font-size:18px;line-height:1.4}
+    .card.today .alg{font-size:11px}
+    .card.today .kcal{margin-top:12px;font-size:12px}
+
+    .foot{margin-top:20px;font-size:12px}
+    details summary{font-size:12.5px}
+  }
 </style>
 </head>
 <body>
@@ -103,10 +148,10 @@
       <div class="school" id="school">불러오는 중…</div>
     </div>
     <div class="nav">
-      <button id="prev">← 지난주</button>
+      <button id="prev">←<span class="lbl"> 지난주</span></button>
       <span class="range" id="range"></span>
-      <button id="next">다음주 →</button>
-      <button id="thisweek">이번주</button>
+      <button id="next"><span class="lbl">다음주 </span>→</button>
+      <button id="thisweek"><span class="lbl">이번주</span><span class="short">오늘</span></button>
     </div>
   </header>
 
