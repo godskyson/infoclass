@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>이번주 급식 식단표</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fff7f3; --bg2:#ffeef2;
+    --panel:#ffffff; --text:#5a4a48; --muted:#b9a6a1;
+    --line:#f6e6e0; --accent:#ff9db0; --accent-deep:#f2718c;
+    --today:#fff6dd; --today-line:#ffd166;
+    --shadow:0 4px 0 rgba(0,0,0,.03), 0 10px 24px rgba(214,160,150,.18);
+    --c1:#ffb3c1; --c2:#ffd6a5; --c3:#fdf39a; --c4:#b9f0c0; --c5:#a9cdff; --c6:#cfc0ff; --c7:#ffc6f0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#2b2422; --bg2:#332a2c;
+      --panel:#3a302e; --text:#f8ece8; --muted:#b6a09b;
+      --line:#4a3d3a; --accent:#ff9db0; --accent-deep:#ffb7c6;
+      --today:#4a3c28; --today-line:#e8b95d;
+      --shadow:0 10px 24px rgba(0,0,0,.35);
+      --c1:#e08c9c; --c2:#dfae7f; --c3:#d6cb74; --c4:#8fc999; --c5:#84a8d6; --c6:#a99ad6; --c7:#d99fc9;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 500px at 10% -10%, var(--bg2), transparent 60%),
+      var(--bg);
+    min-height:100vh;
+    color:var(--text);
+    font-family:"Jua","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+    font-size:16px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:30px 20px 70px}
+
+  header{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+  h1{font-size:27px;line-height:1.25;margin:0;font-weight:400;letter-spacing:-.01em}
+  h1 .dot{color:var(--accent-deep)}
+  .school{color:var(--muted);font-size:14px;line-height:1.4;margin-top:5px}
+
+  .nav{display:flex;align-items:center;gap:8px}
+  button{
+    font-family:inherit;font-size:15px;line-height:1.2;font-weight:400;
+    color:var(--text);background:var(--panel);border:2px solid var(--line);
+    border-radius:999px;padding:9px 15px;cursor:pointer;transition:.18s;
+    box-shadow:0 3px 0 rgba(0,0,0,.04);
+  }
+  button:hover{border-color:var(--accent);color:var(--accent-deep);transform:translateY(-1px)}
+  button:active{transform:translateY(1px);box-shadow:none}
+  .range{font-size:15px;color:var(--muted);min-width:175px;text-align:center;line-height:1.2}
+
+  .tabs{display:flex;gap:8px;margin:0 0 18px}
+  .tabs button{padding:7px 18px}
+  .tabs button[aria-selected="true"]{
+    background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;
+  }
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:16px}
+  .card{
+    position:relative;background:var(--panel);border:2px solid var(--line);
+    border-radius:24px;padding:18px 18px 16px;box-shadow:var(--shadow);
+    display:flex;flex-direction:column;min-height:180px;overflow:hidden;
+    transition:transform .18s;
+  }
+  .card:hover{transform:translateY(-3px)}
+  .card::before{content:"";position:absolute;inset:0 0 auto 0;height:8px;background:var(--strip,var(--c1))}
+  .card.today{background:var(--today);border-color:var(--today-line)}
+
+  .day{display:flex;align-items:center;gap:8px;margin:6px 0 10px;padding-bottom:8px;border-bottom:2px dotted var(--line)}
+  .day .d{font-size:21px;font-weight:400;line-height:1.15}
+  .day .w{font-size:14px;color:var(--muted);line-height:1.15}
+  .badge{
+    margin-left:auto;font-size:11px;font-weight:400;line-height:1.3;color:#fff;
+    background:var(--today-line);border-radius:999px;padding:4px 10px;
+  }
+
+  .menu{list-style:none;margin:0;padding:0;flex:1;display:flex;flex-direction:column;gap:5px}
+  .menu li{font-size:15px;line-height:1.45;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .alg{font-size:11px;color:var(--muted);background:var(--line);border-radius:8px;padding:2px 6px;line-height:1.4}
+  .kcal{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.3}
+  .card.empty .menu{color:var(--muted);font-size:14px;align-items:center;justify-content:center}
+
+  .foot{margin-top:30px;font-size:13px;color:var(--muted);line-height:1.75}
+  .foot b{color:var(--text);font-weight:400}
+  details summary{cursor:pointer;font-size:13.5px}
+  details summary::marker{color:var(--accent)}
+  .state{padding:50px 0;text-align:center;color:var(--muted);font-size:17px}
+  .err{background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:20px;color:var(--muted);font-size:14px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>이번주 급식 식단표<span class="dot">.</span></h1>
+      <div class="school" id="school">불러오는 중…</div>
+    </div>
+    <div class="nav">
+      <button id="prev">← 지난주</button>
+      <span class="range" id="range"></span>
+      <button id="next">다음주 →</button>
+      <button id="thisweek">이번주</button>
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="content"><div class="state">식단을 불러오는 중…</div></div>
+
+  <div class="foot">
+    <details>
+      <summary>알레르기 표시 번호 보기</summary>
+      <div style="margin-top:6px">
+        1 난류 · 2 우유 · 3 메밀 · 4 땅콩 · 5 대두 · 6 밀 · 7 고등어 · 8 게 · 9 새우 · 10 돼지고기 ·
+        11 복숭아 · 12 토마토 · 13 아황산류 · 14 호두 · 15 닭고기 · 16 쇠고기 · 17 오징어 · 18 조개류(굴·전복·홍합 포함) · 19 잣
+      </div>
+    </details>
+    <div style="margin-top:6px">자료 출처 : <b>나이스 교육정보 개방 포털</b> 급식식단정보 API</div>
+  </div>
+</div>
+
+<script>
+const API   = 'https://open.neis.go.kr/hub/mealServiceDietInfo';
+const KEY   = '52239eeab2404d089f907d3a88067a30';
+const ATPT  = 'B10';        // 시도교육청코드 (서울)
+const SCHUL = '7041175';    // 행정표준코드
+const MEAL_NAMES = {'1':'조식','2':'중식','3':'석식'};
+const WEEKDAYS = ['일','월','화','수','목','금','토'];
+const STRIPS   = ['--c7','--c1','--c2','--c3','--c4','--c5','--c6']; // 일~토
+
+let weekOffset = 0;
+let currentMeal = '2';      // 기본 : 중식
+let cache = {};             // 주차별 데이터 캐시
+
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+const fmt = s => `${+s.slice(4,6)}월 ${+s.slice(6,8)}일`;
+
+function mondayOf(offset){
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  const diff = (d.getDay() + 6) % 7;       // 월요일 기준
+  d.setDate(d.getDate() - diff + offset*7);
+  return d;
+}
+function weekDays(offset){
+  const mon = mondayOf(offset);
+  return Array.from({length:7},(_,i)=>{
+    const d = new Date(mon); d.setDate(mon.getDate()+i); return d;
+  });
+}
+
+async function fetchWeek(offset){
+  if(cache[offset]) return cache[offset];
+  const days = weekDays(offset);
+  const from = ymd(days[0]), to = ymd(days[6]);
+  const url = `${API}?KEY=${KEY}&Type=json&pIndex=1&pSize=100`
+            + `&ATPT_OFCDC_SC_CODE=${ATPT}&SD_SCHUL_CODE=${SCHUL}`
+            + `&MLSV_FROM_YMD=${from}&MLSV_TO_YMD=${to}`;
+  const res  = await fetch(url);
+  const json = await res.json();
+  let rows = [];
+  if(json.mealServiceDietInfo){
+    rows = json.mealServiceDietInfo[1].row || [];
+  } else if(json.RESULT && json.RESULT.CODE !== 'INFO-200'){
+    throw new Error(json.RESULT.MESSAGE || json.RESULT.CODE);
+  }
+  cache[offset] = rows;
+  return rows;
+}
+
+function parseDishes(raw){
+  return String(raw || '')
+    .split(/<br\s*\/?>/i)
+    .map(s => s.replace(/&amp;/g,'&').trim())
+    .filter(Boolean)
+    .map(line => {
+      const m = line.match(/^(.*?)\s*\(?([\d.\s]+)\)?$/);
+      if(m && /\d/.test(m[2]) && m[1].trim()){
+        return {name:m[1].trim(), alg:m[2].replace(/\s/g,'').replace(/\.$/,'')};
+      }
+      return {name:line, alg:''};
+    });
+}
+
+function render(rows){
+  const days   = weekDays(weekOffset);
+  const today  = ymd(new Date());
+  const byMeal = {};
+  rows.forEach(r => { (byMeal[r.MMEAL_SC_CODE] ||= {})[r.MLSV_YMD] = r; });
+
+  const any = rows[0];
+  document.getElementById('school').textContent =
+    any ? `${any.SCHUL_NM} · ${MEAL_NAMES[currentMeal]||''} 식단` : '식단 정보';
+
+  document.getElementById('range').textContent = `${fmt(ymd(days[0]))} ~ ${fmt(ymd(days[6]))}`;
+
+  const codes = Object.keys(byMeal).sort();
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+  const shown = codes.length ? codes : ['2'];
+  if(!shown.includes(currentMeal)) currentMeal = shown.includes('2') ? '2' : shown[0];
+  shown.forEach(c => {
+    const b = document.createElement('button');
+    b.textContent = MEAL_NAMES[c] || c;
+    b.setAttribute('aria-selected', c === currentMeal);
+    b.onclick = () => { currentMeal = c; render(rows); };
+    tabs.appendChild(b);
+  });
+
+  const data = byMeal[currentMeal] || {};
+  const list = days.filter((d,i) => i < 5 || data[ymd(d)]);
+
+  const html = list.map(d => {
+    const key = ymd(d);
+    const row = data[key];
+    const isToday = key === today;
+    const dishes = row ? parseDishes(row.DDISH_NM) : [];
+    const kcal = row && row.CAL_INFO ? row.CAL_INFO : '';
+    const strip = `var(${STRIPS[d.getDay()]})`;
+    return `
+      <div class="card${isToday?' today':''}${row?'':' empty'}" style="--strip:${strip}">
+        <div class="day">
+          <span class="d">${+key.slice(6,8)}일</span>
+          <span class="w">${WEEKDAYS[d.getDay()]}요일</span>
+          ${isToday?'<span class="badge">오늘</span>':''}
+        </div>
+        ${row
+          ? `<ul class="menu">${dishes.map(x=>`<li><span>${x.name}</span>${x.alg?`<span class="alg">${x.alg}</span>`:''}</li>`).join('')}</ul>
+             ${kcal?`<div class="kcal">${kcal}</div>`:''}`
+          : `<div class="menu">급식이 없어요</div>`}
+      </div>`;
+  }).join('');
+
+  document.getElementById('content').innerHTML = `<div class="grid">${html}</div>`;
+}
+
+async function load(){
+  document.getElementById('content').innerHTML = '<div class="state">식단을 불러오는 중…</div>';
+  try{
+    const rows = await fetchWeek(weekOffset);
+    render(rows);
+  }catch(e){
+    document.getElementById('range').textContent =
+      `${fmt(ymd(weekDays(weekOffset)[0]))} ~ ${fmt(ymd(weekDays(weekOffset)[6]))}`;
+    document.getElementById('content').innerHTML =
+      `<div class="err"><b>식단을 불러오지 못했습니다.</b><br>${e.message}<br><br>
+       인터넷 연결 또는 나이스 API 상태를 확인해 주세요. 브라우저에서 직접 이 파일을 열어야 정상 동작합니다.</div>`;
+  }
+}
+
+document.getElementById('prev').onclick     = () => { weekOffset--; load(); };
+document.getElementById('next').onclick     = () => { weekOffset++; load(); };
+document.getElementById('thisweek').onclick = () => { weekOffset = 0; load(); };
+load();
+</script>
+</body>
+</html>
