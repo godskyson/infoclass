@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2단계 인증 알고리즘 빌더</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      /* 이미지 파스텔 팔레트 */
+      --c-mint: #C6DBDA;
+      --c-pink: #FEE1E8;
+      --c-peach: #FED7C3;
+      --c-yellow: #F6EAC2;
+      --c-purple: #ECD5E3;
+
+      /* UI 테마 매핑 */
+      --bg-color: #faf9f6;
+      --card-bg: #ffffff;
+      --sidebar-bg: #fdfbf7;
+      --border-color: #ebdcd0;
+      
+      --accent-main: #6c9a99; /* 민트 기반 딥 포인트 컬러 */
+      --accent-soft: var(--c-mint);
+      --highlight-yellow: var(--c-yellow);
+      --card-active: var(--c-pink);
+      
+      --correct: #52a37e;
+      --correct-soft: #eef7f2;
+      --wrong: #df6262;
+      --wrong-soft: #fdf0f0;
+
+      --text-main: #3d3b3a;
+      --text-muted: #7d7977;
+      --card-shadow: 0 12px 30px -6px rgba(220, 195, 185, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 1100px;
+      min-height: 640px;
+      background: var(--card-bg);
+      border: 2px solid var(--c-peach);
+      border-radius: 28px;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+    }
+
+    /* 사이드바 영역 */
+    .sidebar {
+      background-color: var(--sidebar-bg);
+      border-right: 1.5px solid var(--border-color);
+      padding: 36px 26px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-header h2 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--accent-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-header p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .algo-timeline {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .algo-timeline::-webkit-scrollbar {
+      width: 5px;
+    }
+    .algo-timeline::-webkit-scrollbar-thumb {
+      background: var(--c-peach);
+      border-radius: 6px;
+    }
+
+    .algo-step {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #ffffff;
+      border: 1.5px dashed #e8ded4;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .algo-step .step-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #a89f91;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: color 0.3s;
+    }
+
+    .algo-step .step-placeholder {
+      font-size: 0.85rem;
+      color: #aba49c;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .algo-step .step-text {
+      font-size: 0.9rem;
+      color: var(--text-main);
+      display: none;
+      line-height: 1.45;
+      font-weight: 600;
+      animation: revealText 0.4s ease forwards;
+    }
+
+    @keyframes revealText {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 사이드바 정답 단계별 파스텔 컬러링 */
+    .algo-step.unlocked {
+      transform: translateX(4px);
+      box-shadow: 0 4px 12px rgba(220, 195, 185, 0.3);
+      border-style: solid;
+    }
+
+    .algo-step.unlocked .step-placeholder { display: none; }
+    .algo-step.unlocked .step-text { display: block; }
+
+    #algo-step-1.unlocked { background-color: var(--c-mint); border-color: #a3c4c3; }
+    #algo-step-1.unlocked .step-badge { color: #3b6d6c; }
+
+    #algo-step-2.unlocked { background-color: var(--c-pink); border-color: #f7bdcb; }
+    #algo-step-2.unlocked .step-badge { color: #b34b65; }
+
+    #algo-step-3.unlocked { background-color: var(--c-peach); border-color: #f8be9f; }
+    #algo-step-3.unlocked .step-badge { color: #b86236; }
+
+    #algo-step-4.unlocked { background-color: var(--c-yellow); border-color: #edd997; }
+    #algo-step-4.unlocked .step-badge { color: #9c8028; }
+
+    #algo-step-5.unlocked { background-color: var(--c-purple); border-color: #dbb3cd; }
+    #algo-step-5.unlocked .step-badge { color: #7f4b6f; }
+
+    #algo-step-6.unlocked { background-color: var(--c-mint); border-color: #a3c4c3; }
+    #algo-step-6.unlocked .step-badge { color: #3b6d6c; }
+
+    /* 슬라이드 퀴즈 영역 */
+    .stage {
+      position: relative;
+      padding: 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #ffffff;
+    }
+
+    .slide {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      animation: fadeIn 0.35s ease forwards;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .slide-progress {
+      font-size: 0.85rem;
+      color: var(--accent-main);
+      font-weight: 800;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .slide-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1.35;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .slide-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 26px;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .btn-option {
+      background: #faf8f5;
+      border: 1.5px solid #ebe2d8;
+      color: var(--text-main);
+      padding: 16px 20px;
+      border-radius: 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-option:hover {
+      background: var(--c-yellow);
+      border-color: #ebd38d;
+      transform: translateY(-2px);
+    }
+
+    .btn-option.correct {
+      border-color: #83cbb1;
+      background: var(--correct-soft);
+      color: #216d4c;
+    }
+
+    .btn-option.wrong {
+      border-color: #f7a9a9;
+      background: var(--wrong-soft);
+      color: #a82e2e;
+    }
+
+    .btn-option i {
+      font-size: 1.1rem;
+      color: var(--accent-main);
+    }
+
+    .btn-option.correct i { color: var(--correct); }
+    .btn-option.wrong i { color: var(--wrong); }
+
+    .nav-bar {
+      margin-top: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 48px;
+    }
+
+    .feedback-msg {
+      font-size: 0.95rem;
+      font-weight: 700;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .feedback-msg.show { opacity: 1; }
+    .feedback-msg.correct { color: var(--correct); }
+    .feedback-msg.wrong { color: var(--wrong); }
+
+    .btn-primary {
+      background: var(--accent-main);
+      color: #ffffff;
+      border: none;
+      padding: 13px 30px;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(108, 154, 153, 0.35);
+    }
+
+    .btn-primary:hover {
+      background: #5b8584;
+      box-shadow: 0 6px 14px rgba(108, 154, 153, 0.45);
+    }
+
+    .center-content {
+      margin: auto 0;
+      text-align: center;
+    }
+
+    .center-content h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      color: var(--text-main);
+    }
+
+    .center-content p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    .btn-start {
+      margin: 0 auto;
+      display: inline-flex;
+    }
+
+    @media (max-width: 880px) {
+      .app-container {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        border-right: none;
+        border-bottom: 1.5px solid var(--border-color);
+        max-height: 250px;
+        padding: 24px;
+      }
+      .stage {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2><i class="fa-solid fa-shapes"></i> 알고리즘 빌더</h2>
+      <p>문제를 맞추면 숨겨진 자연어 알고리즘이 순서대로 채워집니다.</p>
+    </div>
+    <ul class="algo-timeline" id="algo-timeline">
+      <li class="algo-step" id="algo-step-1">
+        <div class="step-badge">1단계: 이벤트</div>
+        <div class="step-placeholder"><i class="fa-solid fa-lock"></i> 1단계 문제를 맞춰 잠금을 해제하세요</div>
+        <div class="step-text">오브젝트를 클릭하여 프로그램을 시작한다.</div>
+      </li>
+      <li class="algo-step" id="algo-step-2">
+        <div class="step-badge">2단계: 입력 받기</div>
+        <div class="step-placeholder"><i class="fa-solid fa-lock"></i> 2단계 문제를 맞춰 잠금을 해제하세요</div>
+        <div class="step-text">아이디와 비밀번호를 사용자에게 묻고 각 입력 변수에 저장한다.</div>
+      </li>
+      <li class="algo-step" id="algo-step-3">
+        <div class="step-badge">3단계: 1차 검증</div>
+        <div class="step-placeholder"><i class="fa-solid fa-lock"></i> 3단계 문제를 맞춰 잠금을 해제하세요</div>
+        <div class="step-text">입력한 아이디와 비밀번호가 기존 정보와 모두 일치하는지 확인한다.</div>
+      </li>
+      <li class="algo-step" id="algo-step-4">
+        <div class="step-badge">4단계: 2차 인증 번호</div>
+        <div class="step-placeholder"><i class="fa-solid fa-lock"></i> 4단계 문제를 맞춰 잠금을 해제하세요</div>
+        <div class="step-text">1000부터 9999 사이의 4자리 무작위 수를 생성해 인증번호로 정하고 수신 신호를 보낸다.</div>
+      </li>
+      <li class="algo-step" id="algo-step-5">
+        <div class="step-badge">5단계: 인증 대조</div>
+        <div class="step-placeholder"><i class="fa-solid fa-lock"></i> 5단계 문제를 맞춰 잠금을 해제하세요</div>
+        <div class="step-text">사용자가 입력한 번호가 생성된 인증번호와 일치하는지 비교한다.</div>
+      </li>
+      <li class="algo-step" id="algo-step-6">
+        <div class="step-badge">6단계: 결과 안내</div>
+        <div class="step-placeholder"><i class="fa-solid fa-lock"></i> 6단계 문제를 맞춰 잠금을 해제하세요</div>
+        <div class="step-text">인증 성공 시 로그인 완료를, 틀리면 "땡 틀렸어요."를 말한다.</div>
+      </li>
+    </ul>
+  </aside>
+
+  <main class="stage">
+    <div class="slide active" id="slide-0">
+      <div class="center-content">
+        <h1>2단계 인증 로그인<br><span style="color: var(--accent-main);">알고리즘 빌더</span></h1>
+        <p>엔트리 블록코드의 흐름을 퀴즈로 직접 완성해보세요.<br>정답을 맞힐 때마다 파스텔톤 알고리즘 카드가 순서대로 잠금 해제됩니다.</p>
+        <button class="btn-primary btn-start" style="display: inline-flex;" onclick="nextSlide()">
+          챌린지 시작하기 <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="slide" id="slide-1">
+      <div>
+        <div class="slide-progress">Question 1 of 6</div>
+        <h2 class="slide-title">프로그램의 시작점은?</h2>
+        <p class="slide-desc">이 알고리즘이 동작을 시작하게 만드는 최초의 이벤트 블록은 무엇인가요?</p>
+        <div class="options-grid">
+          <button class="btn-option" onclick="checkAnswer(1, 0, this)"><i class="fa-regular fa-hand-pointer"></i> [오브젝트를 클릭했을 때]</button>
+          <button class="btn-option" onclick="checkAnswer(1, 1, this)"><i class="fa-regular fa-circle-play"></i> [시작하기 버튼을 클릭했을 때]</button>
+          <button class="btn-option" onclick="checkAnswer(1, 2, this)"><i class="fa-regular fa-keyboard"></i> [스페이스 키를 눌렀을 때]</button>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <div class="feedback-msg" id="feedback-1"></div>
+        <button class="btn-primary" id="btn-next-1" onclick="nextSlide()">다음 단계 <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <div class="slide" id="slide-2">
+      <div>
+        <div class="slide-progress">Question 2 of 6</div>
+        <h2 class="slide-title">계정 정보 입력 및 저장</h2>
+        <p class="slide-desc">사용자가 입력한 아이디와 비밀번호는 엔트리에서 어떻게 처리되나요?</p>
+        <div class="options-grid">
+          <button class="btn-option" onclick="checkAnswer(2, 0, this)"><i class="fa-solid fa-database"></i> 묻고 기다린 후 '대답'을 해당 변수에 각각 대입하여 정한다.</button>
+          <button class="btn-option" onclick="checkAnswer(2, 1, this)"><i class="fa-solid fa-comment"></i> 변수에 넣지 않고 바로 화면에 말하기로 출력한다.</button>
+          <button class="btn-option" onclick="checkAnswer(2, 2, this)"><i class="fa-solid fa-trash"></i> 비밀번호만 저장하고 아이디는 따로 저장하지 않는다.</button>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <div class="feedback-msg" id="feedback-2"></div>
+        <button class="btn-primary" id="btn-next-2" onclick="nextSlide()">다음 단계 <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <div class="slide" id="slide-3">
+      <div>
+        <div class="slide-progress">Question 3 of 6</div>
+        <h2 class="slide-title">1차 계정 검증 논리 연산</h2>
+        <p class="slide-desc">아이디와 비밀번호를 모두 검증하기 위해 조건문에 사용해야 하는 논리 연산은?</p>
+        <div class="options-grid">
+          <button class="btn-option" onclick="checkAnswer(3, 0, this)"><i class="fa-solid fa-code-branch"></i> (아이디 일치) 또는 (비밀번호 일치)</button>
+          <button class="btn-option" onclick="checkAnswer(3, 1, this)"><i class="fa-solid fa-code-merge"></i> (아이디 값 = 아이디 입력 값) 그리고 (비밀번호 값 = 비밀번호 입력 값)</button>
+          <button class="btn-option" onclick="checkAnswer(3, 2, this)"><i class="fa-solid fa-equals"></i> 아이디 값 = 비밀번호 값</button>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <div class="feedback-msg" id="feedback-3"></div>
+        <button class="btn-primary" id="btn-next-3" onclick="nextSlide()">다음 단계 <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <div class="slide" id="slide-4">
+      <div>
+        <div class="slide-progress">Question 4 of 6</div>
+        <h2 class="slide-title">4자리 인증번호 난수 생성</h2>
+        <p class="slide-desc">1000부터 시작하는 4자리 자연수 형태의 무작위 인증번호를 만들려면 블록을 어떻게 설정해야 할까요?</p>
+        <div class="options-grid">
+          <button class="btn-option" onclick="checkAnswer(4, 0, this)"><i class="fa-solid fa-shuffle"></i> [1000] 부터 [9999] 사이의 무작위 수</button>
+          <button class="btn-option" onclick="checkAnswer(4, 1, this)"><i class="fa-solid fa-shuffle"></i> [1000] 부터 [10000] 사이의 무작위 수</button>
+          <button class="btn-option" onclick="checkAnswer(4, 2, this)"><i class="fa-solid fa-shuffle"></i> [1000] 부터 [8999] 사이의 무작위 수</button>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <div class="feedback-msg" id="feedback-4"></div>
+        <button class="btn-primary" id="btn-next-4" onclick="nextSlide()">다음 단계 <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <div class="slide" id="slide-5">
+      <div>
+        <div class="slide-progress">Question 5 of 6</div>
+        <h2 class="slide-title">2단계 인증번호 확인 조건</h2>
+        <p class="slide-desc">사용자가 입력한 번호가 전송된 번호와 맞는지 판별하는 조건식은?</p>
+        <div class="options-grid">
+          <button class="btn-option" onclick="checkAnswer(5, 0, this)"><i class="fa-solid fa-equals"></i> 대답 = 인증번호 값</button>
+          <button class="btn-option" onclick="checkAnswer(5, 1, this)"><i class="fa-solid fa-arrow-up-right-from-square"></i> 문자 수신 신호 = 대답</button>
+          <button class="btn-option" onclick="checkAnswer(5, 2, this)"><i class="fa-solid fa-shield-halved"></i> 아이디 값 = 인증번호 값</button>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <div class="feedback-msg" id="feedback-5"></div>
+        <button class="btn-primary" id="btn-next-5" onclick="nextSlide()">다음 단계 <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <div class="slide" id="slide-6">
+      <div>
+        <div class="slide-progress">Question 6 of 6 (OX)</div>
+        <h2 class="slide-title">오류 처리 문구 분석</h2>
+        <p class="slide-desc">1차 로그인 실패 시와 2차 인증번호 불일치 시 출력되는 실패 문구는 '땡 틀렸어요.'로 동일하다.</p>
+        <div class="options-grid">
+          <button class="btn-option" onclick="checkAnswer(6, 0, this)"><i class="fa-solid fa-circle-check"></i> O (그렇다. 두 조건문의 '아니면' 블록 내용이 같다.)</button>
+          <button class="btn-option" onclick="checkAnswer(6, 1, this)"><i class="fa-solid fa-circle-xmark"></i> X (아니다. 서로 다른 실패 안내 문구를 사용한다.)</button>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <div class="feedback-msg" id="feedback-6"></div>
+        <button class="btn-primary" id="btn-next-6" onclick="nextSlide()">결과 확인 <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <div class="slide" id="slide-7">
+      <div class="center-content">
+        <h1>알고리즘 조립 완료! 🎉</h1>
+        <p>축하합니다! 모든 퀴즈를 통과하여 전체 알고리즘을 해제했습니다.<br>왼쪽 패널에 정리된 완성형 2단계 인증 로직을 확인해보세요.</p>
+        <button class="btn-primary btn-start" style="display: inline-flex;" onclick="resetAll()">
+          처음부터 다시 풀기 <i class="fa-solid fa-rotate-right"></i>
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  let currentStep = 0;
+  const answers = {
+    1: 0,
+    2: 0,
+    3: 1,
+    4: 0,
+    5: 0,
+    6: 0
+  };
+
+  function nextSlide() {
+    document.getElementById(`slide-${currentStep}`).classList.remove('active');
+    currentStep++;
+    document.getElementById(`slide-${currentStep}`).classList.add('active');
+  }
+
+  function checkAnswer(step, selectedIndex, btnElement) {
+    const feedback = document.getElementById(`feedback-${step}`);
+    const nextBtn = document.getElementById(`btn-next-${step}`);
+    const currentSlideEl = document.getElementById(`slide-${step}`);
+    const allBtns = currentSlideEl.querySelectorAll('.btn-option');
+
+    if (selectedIndex === answers[step]) {
+      allBtns.forEach(btn => btn.classList.remove('correct', 'wrong'));
+      btnElement.classList.add('correct');
+      feedback.textContent = '정답입니다! 해당 알고리즘 단계가 추가되었습니다.';
+      feedback.className = 'feedback-msg show correct';
+      nextBtn.style.display = 'inline-flex';
+
+      const stepItem = document.getElementById(`algo-step-${step}`);
+      if (stepItem) {
+        stepItem.classList.add('unlocked');
+        stepItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    } else {
+      btnElement.classList.add('wrong');
+      feedback.textContent = '다시 한 번 생각해보세요!';
+      feedback.className = 'feedback-msg show wrong';
+    }
+  }
+
+  function resetAll() {
+    document.getElementById(`slide-${currentStep}`).classList.remove('active');
+    currentStep = 0;
+    document.getElementById('slide-0').classList.add('active');
+
+    document.querySelectorAll('.algo-step').forEach(step => step.classList.remove('unlocked'));
+    document.querySelectorAll('.btn-option').forEach(btn => btn.classList.remove('correct', 'wrong'));
+    document.querySelectorAll('.feedback-msg').forEach(msg => {
+      msg.textContent = '';
+      msg.className = 'feedback-msg';
+    });
+    for (let i = 1; i <= 6; i++) {
+      const nextBtn = document.getElementById(`btn-next-${i}`);
+      if (nextBtn) nextBtn.style.display = 'none';
+    }
+  }
+</script>
+
+</body>
+</html>
