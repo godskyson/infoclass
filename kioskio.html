@@ -104,9 +104,28 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .title-wrap .cast{display:flex;margin:10px 0 6px}
 .title-wrap .cast img{width:58px;height:58px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.7);margin-left:-10px;box-shadow:0 4px 12px rgba(0,0,0,.5)}
 .title-wrap .cast img:first-child{margin-left:0}
-.namebox{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--panel-line);padding:8px 12px}
-.namebox label{font-family:var(--display);color:var(--gold);font-size:15px}
-.namebox input{font:inherit;font-size:16px;background:#0A0F16;color:var(--ink);border:1px solid var(--panel-line);padding:6px 10px;width:220px}
+.gate{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:0 60px}
+.gate .gtitle{font-family:var(--display);font-size:30px;letter-spacing:.02em;text-shadow:0 3px 14px #000}
+.gate .geyebrow{font-family:var(--display);color:var(--gold);letter-spacing:.26em;font-size:13px;text-shadow:0 2px 10px #000}
+.gate .gcard{width:620px;background:var(--panel);border:1px solid var(--panel-line);border-top:2px solid var(--gold);padding:16px 22px 18px;backdrop-filter:blur(4px)}
+.gate .gitem{display:flex;gap:11px;align-items:flex-start;padding:6px 0;font-size:14.5px;line-height:1.6;color:#D7DFE9}
+.gate .gitem i{font-style:normal;color:var(--ok);font-family:var(--display);flex-shrink:0}
+.gate .gitem b{color:#fff;font-weight:400;font-family:var(--display)}
+.gate .agree{display:flex;align-items:center;gap:12px;background:var(--panel);border:2px solid var(--panel-line);padding:12px 20px;font-family:var(--display);font-size:20px;transition:border-color .15s,background .15s}
+.gate .agree:hover{border-color:var(--gold)}
+.gate .agree.on{border-color:var(--ok);background:rgba(94,227,154,.1)}
+.gate .agree .bx{width:26px;height:26px;border:2px solid var(--muted);display:grid;place-items:center;font-size:17px;flex-shrink:0}
+.gate .agree.on .bx{background:var(--ok);border-color:var(--ok);color:#05210F}
+.privacy-note{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--panel-line);padding:7px 14px;font-size:13px;color:var(--muted)}
+.privacy-note b{color:var(--ok);font-weight:400;font-family:var(--display)}
+.privacy-note button{font-family:var(--display);color:var(--gold);font-size:13px;text-decoration:underline}
+.pbox{width:520px;max-height:440px;overflow:auto;background:var(--panel-solid);border:1px solid var(--panel-line);box-shadow:0 30px 60px rgba(0,0,0,.6)}
+.pbox .band{background:var(--gold);color:var(--gold-ink);font-family:var(--display);font-size:17px;padding:8px 18px;letter-spacing:.06em}
+.pbox .body{padding:16px 20px;font-size:14px;line-height:1.75}
+.pbox h4{font-family:var(--display);font-weight:400;font-size:16px;color:var(--gold);margin:12px 0 2px}
+.pbox h4:first-child{margin-top:0}
+.pbox p{margin:0;color:#D7DFE9}
+.pbox .foot{border-top:1px solid var(--panel-line);padding:10px 18px;text-align:right;font-family:var(--display);color:var(--gold);font-size:15px;cursor:pointer}
 .start-btn{font-family:var(--display);font-size:24px;background:var(--gold);color:var(--gold-ink);padding:12px 38px;letter-spacing:.08em;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);margin-top:6px;box-shadow:0 8px 24px rgba(242,193,78,.35)}
 .start-btn:hover{filter:brightness(1.08)}
 .tiny{font-size:12.5px;color:var(--muted);text-shadow:0 1px 4px #000}
@@ -350,7 +369,7 @@ const SHOP = {
 /* ---------- 상태 ---------- */
 const KEY='kiosk-village-v2';
 let S = load() || fresh(); S.side=S.side||{}; S.wrong=S.wrong||0;
-function fresh(name){ return {name:name||'', asked:{}, cards:[], side:{}, wrong:0, exp:{}, kioskFails:0, shopTried:[], picks:{pro:[],con:[]}, stance:'', reason:''}; }
+function fresh(){ return {agreed:false, asked:{}, cards:[], side:{}, wrong:0, exp:{}, kioskFails:0, shopTried:[], picks:{pro:[],con:[]}, stance:'', reason:''}; }
 function load(){ try{ const r=localStorage.getItem(KEY); return r?JSON.parse(r):null; }catch(e){ return null; } }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 
@@ -360,7 +379,7 @@ const npcById = id => NPCS.find(n=>n.id===id);
 const askedCount = n => n.qs.filter((_,i)=>S.asked[n.id+'-'+i]).length;
 const npcDone = n => askedCount(n)===n.qs.length;
 const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const myName = () => S.name ? '나 · '+S.name.replace(/^\d+\s*/,'') : '나';
+const myName = () => '나';
 
 /* ---------- 레이어 ---------- */
 const L = {}; ['bg','content','hud','menu','dlg','popup'].forEach(id=>L[id]=document.getElementById(id));
@@ -442,12 +461,46 @@ function showTitle(){
     <div class="cast">${NPCS.map(n=>`<img src="${IMG[n.id].face}" alt="${n.name}" title="${n.name}">`).join('')}</div>
     <p style="margin:0;max-width:600px;font-size:15px;text-shadow:0 1px 6px #000">구의회가 다음 주에 이 조례를 표결해. 표결 전에 마을 사람 6명을 만나고 2가지 체험을 하며 <b style="color:var(--gold)">쟁점 카드 ${TOTAL}장</b>을 모으는 게 너의 임무야.</p>
     <div class="legend"><span class="p">찬성 = 제한에 찬성</span><span class="c">반대 = 제한에 반대</span><span class="b">양면 = 어느 쪽도 가능</span></div>
-    <div class="namebox"><label for="nm">학번 이름</label><input type="text" id="nm" value="${esc(S.name)}" placeholder="예) 20101 홍길동"></div>
+    <div class="privacy-note"><b>✔ 개인정보를 묻지 않습니다</b><span>이름·학번 입력 없이 바로 시작해요. 진행 상황은 이 기기에만 저장됩니다.</span><button data-action="privacy">개인정보 안내</button></div>
     <button class="start-btn" data-action="start">${started?'▶ 이어서 하기':'▶ 게임 시작'}</button>
     ${started?'<button class="tiny" data-action="reset" style="text-decoration:underline">처음부터 다시 하기</button>':''}
   </div>`);
 }
 
+function showGate(){
+  cur={screen:'gate'}; clearDlg(); setMenu(null); setHud(null); L.popup.innerHTML='';
+  setBg(IMG.grandma.scene,'blur heavy');
+  const on=!!tmp.agree;
+  setContent(`<div class="gate">
+    <div class="geyebrow">시작하기 전에</div>
+    <div class="gtitle">이 게임은 개인정보를 묻지 않아요</div>
+    <div class="gcard">
+      <div class="gitem"><i>✔</i><span><b>이름·학번을 쓰지 않아요.</b> 회원가입도 없고, 학교·연락처·이메일도 묻지 않아요.</span></div>
+      <div class="gitem"><i>✔</i><span><b>내 기록은 이 기기에만 저장돼요.</b> 모은 카드와 내가 쓴 글은 지금 쓰는 컴퓨터의 웹브라우저 안에만 남아요. 선생님도, 만든 사람도 볼 수 없어요.</span></div>
+      <div class="gitem"><i>✔</i><span><b>인터넷으로 보내지 않아요.</b> 글씨체를 불러오는 것 말고는 바깥으로 나가는 정보가 없어요.</span></div>
+      <div class="gitem"><i>✔</i><span><b>언제든 지울 수 있어요.</b> 첫 화면의 「처음부터 다시 하기」를 누르면 기록이 모두 사라져요.</span></div>
+      <div class="gitem"><i>✔</i><span><b>글을 낼 때는 내가 직접 이름을 써요.</b> 마지막에 정리한 글을 복사해 붙일 때, 학번과 이름은 내가 적어요.</span></div>
+    </div>
+    <button class="agree ${on?'on':''}" data-action="agree"><span class="bx">${on?'✓':''}</span><span>안내를 읽고 이해했어요</span></button>
+    <button class="start-btn" data-action="gate-ok" ${on?'':'disabled'} style="${on?'':'opacity:.4;cursor:not-allowed;box-shadow:none'}">확인</button>
+    <div class="tiny">${on?'이제 게임을 시작할 수 있어요':'위 상자를 체크하면 확인 버튼이 켜져요'}</div>
+  </div>`);
+}
+function showPrivacy(){
+  L.popup.innerHTML = `<div class="pbox"><div class="band">개인정보 안내</div><div class="body">
+    <h4>이 게임은 개인정보를 수집하지 않습니다</h4>
+    <p>이름, 학번, 학교, 연락처, 이메일 등 어떤 개인정보도 입력받지 않고 저장하지 않아요. 회원가입도 없습니다.</p>
+    <h4>내가 고른 카드는 어디에 저장되나요?</h4>
+    <p>내가 만난 사람, 모은 쟁점 카드, 고른 입장과 쓴 글은 <b>지금 쓰는 기기의 웹브라우저 안에만</b> 저장됩니다. 선생님도, 만든 사람도 볼 수 없어요.</p>
+    <h4>인터넷으로 어디에 보내지나요?</h4>
+    <p>보내지 않습니다. 글씨체를 불러오는 것 말고는 바깥으로 나가는 정보가 없어요.</p>
+    <h4>내 기록을 지우고 싶어요</h4>
+    <p>첫 화면의 <b>처음부터 다시 하기</b>를 누르면 이 기기에 저장된 기록이 모두 지워집니다. 브라우저의 인터넷 사용 기록 삭제로도 지울 수 있어요.</p>
+    <h4>정리한 글은 어떻게 제출하나요?</h4>
+    <p>마지막 화면에서 글을 복사해 Padlet에 직접 붙여 넣습니다. 이때 학번과 이름은 <b>내가 직접</b> 적습니다.</p>
+  </div><div class="foot" data-action="popclose">확인 ▶</div></div>`;
+  tmp.popThen=null;
+}
 function showVillage(){
   cur={screen:'village', loc:'마을 광장'}; clearDlg(); setMenu(null); L.popup.innerHTML='';
   setBg(IMG.official.scene,'blur heavy'); setHud('마을 광장');
@@ -609,7 +662,7 @@ function showNotes(tab){
 function buildOutput(){
   const line=side=>S.picks[side].length?S.picks[side].map((id,i)=>{const c=ALL_CARDS[id];return `${i+1}. ${c.title} — ${c.text.split(' → ')[0]} (${c.who})`;}).join('\n'):'(아직 고르지 않음)';
   const st=S.stance==='pro'?'찬성':S.stance==='con'?'반대':'(아직 정하지 않음)';
-  return `[쟁점 요약하기] ${S.name||'학번 이름'}\n논제: ${MOTION}\n\n■ 찬성 주장 (설치를 제한해야 한다)\n${line('pro')}\n\n■ 반대 주장 (제한하면 안 된다)\n${line('con')}\n\n■ 내 입장: ${st}\n${S.reason||''}`.trim();
+  return `[쟁점 요약하기] 학번 이름: (직접 입력하세요)\n논제: ${MOTION}\n\n■ 찬성 주장 (설치를 제한해야 한다)\n${line('pro')}\n\n■ 반대 주장 (제한하면 안 된다)\n${line('con')}\n\n■ 내 입장: ${st}\n${S.reason||''}`.trim();
 }
 function fallbackCopy(done){ const o=document.getElementById('out'); if(!o) return; o.focus(); o.select(); try{ document.execCommand('copy'); done(); }catch(e){ toast('글상자를 직접 선택해서 복사해 줘'); } }
 
@@ -622,8 +675,11 @@ stage.addEventListener('click', e=>{
     case 'popclose': popclose(); break;
     case 'side': chooseSide(d.val); break;
     case 'move': { const c=ALL_CARDS[d.id]; if(c.side!=='both'){ toast('이 카드는 옮길 수 없어'); return; } const now=S.side[d.id]||'pro'; S.side[d.id]=now==='pro'?'con':'pro'; ['pro','con'].forEach(s=>{const i=S.picks[s].indexOf(d.id); if(i>=0) S.picks[s].splice(i,1);}); save(); showNotes(); break; }
-    case 'start': { const nm=document.getElementById('nm'); if(nm) S.name=nm.value.trim(); save(); showVillage(); break; }
-    case 'reset': { if(!tmp.confirmReset){ tmp.confirmReset=true; b.textContent='정말 지울까? 한 번 더 누르면 초기화'; return; } S=fresh(S.name); tmp={}; save(); showTitle(); break; }
+    case 'start': showVillage(); break;
+    case 'privacy': showPrivacy(); break;
+    case 'agree': tmp.agree=!tmp.agree; showGate(); break;
+    case 'gate-ok': if(!tmp.agree) return; S.agreed=true; save(); showTitle(); break;
+    case 'reset': { if(!tmp.confirmReset){ tmp.confirmReset=true; b.textContent='정말 지울까? 한 번 더 누르면 초기화'; return; } S=fresh(); tmp={}; save(); showGate(); break; }
     case 'village': stopTimer(); tmp.k=null; showVillage(); break;
     case 'notes': showNotes(); break;
     case 'ntab': showNotes(d.tab); break;
@@ -651,14 +707,13 @@ stage.addEventListener('click', e=>{
 });
 stage.addEventListener('input', e=>{
   if(e.target.id==='reason'){ S.reason=e.target.value; save(); const o=document.getElementById('out'); if(o) o.value=buildOutput(); }
-  if(e.target.id==='nm'){ S.name=e.target.value; save(); }
 });
 addEventListener('keydown', e=>{
   if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
   if(e.key===' '||e.key==='Enter'){ if(L.popup.innerHTML){ if(L.popup.querySelector('.foot')){ e.preventDefault(); popclose(); } } else if(tmp.dlg){ e.preventDefault(); next(); } }
 });
 
-showTitle();
+if(S.agreed) showTitle(); else showGate();
 })();
 </script>
 
