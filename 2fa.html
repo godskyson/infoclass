@@ -1,609 +1,527 @@
+
+
+2fa · HTML
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2단계 인증(2FA) 인터랙티브 체험 실습실</title>
-  <!-- Tailwind CSS CDN -->
+  <title>2단계 인증(2FA) 체험 실습실</title>
+  <meta name="description" content="비밀번호 다음에 스마트폰으로 한 번 더 확인하는 2단계 인증의 원리를 PC와 스마트폰 화면으로 직접 체험하는 중학교 정보 수업용 시뮬레이터">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2315171c'/%3E%3Ctext x='16' y='20.5' font-family='monospace' font-size='11' font-weight='700' fill='%2388d0dc' text-anchor='middle'%3E2FA%3C/text%3E%3C/svg%3E">
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"IBM Plex Sans KR"', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script>
+    // unpkg 접속이 막힌 환경이면 jsDelivr에서 다시 불러오기
+    if (!window.lucide) {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.min.js"><\/script>');
+    }
+  </script>
+  <script>
+    // 아이콘 라이브러리를 못 불러와도 체험 기능은 멈추지 않도록 안전하게 호출
+    function renderIcons() {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons({ attrs: { 'stroke-width': 1.75 } });
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
-
+    :root {
+      --paper: #f3f2ee;
+      --paper-2: #e9e7e1;
+      --surface: #fbfaf8;
+      --ink: #16181d;
+      --ink-2: #474b54;
+      --ink-3: #737780;
+      --line: #dad7cf;
+      --accent: #0d6a7e;
+      --accent-strong: #0a5667;
+      --accent-soft: #dcecef;
+      --ok: #2a8455;
+      --bad: #bd422e;
+      --shadow: 0 1px 0 rgba(22, 24, 29, .04), 0 18px 40px -18px rgba(38, 44, 40, .28);
+    }
+ 
+    html { scroll-behavior: smooth; }
     body {
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      background:
+        radial-gradient(1200px 520px at 88% -8%, rgba(13, 106, 126, .09), transparent 60%),
+        radial-gradient(900px 480px at -10% 110%, rgba(168, 109, 18, .06), transparent 60%),
+        var(--paper);
+      color: var(--ink);
+      word-break: keep-all;
+      -webkit-font-smoothing: antialiased;
     }
-
-    /* 스마트폰 베젤 및 애니메이션 커스텀 */
+    /* 종이 질감 노이즈 */
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: .35; mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    .wrap { position: relative; z-index: 2; }
+    .tnum { font-variant-numeric: tabular-nums; }
+    h1, h2 { text-wrap: balance; letter-spacing: -0.02em; }
+    p { text-wrap: pretty; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+ 
+    /* 버튼 */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; font-weight: 600; border-radius: 12px;
+      transition: background-color .2s, color .2s, transform .15s cubic-bezier(.3,.7,.4,1), box-shadow .2s; }
+    .btn:active { transform: translateY(1px) scale(.985); }
+    .btn-primary { background: var(--ink); color: #fff; box-shadow: 0 10px 20px -12px rgba(22, 24, 29, .6); }
+    .btn-primary:hover { background: #2a2d35; }
+    .btn-accent { background: var(--accent); color: #fff; box-shadow: 0 10px 22px -12px rgba(13, 106, 126, .7); }
+    .btn-accent:hover { background: var(--accent-strong); }
+    .btn-quiet { background: var(--paper-2); color: var(--ink-2); }
+    .btn-quiet:hover { background: #dedbd3; color: var(--ink); }
+    .link-quiet { color: var(--ink-3); font-size: .8125rem; text-decoration: underline; text-underline-offset: 3px; transition: color .2s; }
+    .link-quiet:hover { color: var(--ink); }
+ 
+    /* 헤더 세그먼트 탭 */
+    .seg { background: var(--paper-2); border-radius: 14px; padding: 4px; display: flex; gap: 2px; }
+    .seg-btn { display: flex; align-items: center; gap: .45rem; padding: .5rem .9rem; border-radius: 10px; font-size: .875rem;
+      font-weight: 500; color: var(--ink-2); transition: all .2s; }
+    .seg-btn:hover { color: var(--ink); }
+    .seg-btn.is-active { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(22,24,29,.08), 0 4px 10px -6px rgba(22,24,29,.25); }
+    .seg-btn .seg-num { font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--ink-3); }
+    .seg-btn.is-active .seg-num { color: var(--accent); }
+ 
+    /* 단계 표시 */
+    .stepper { display: flex; align-items: center; gap: .5rem; font-size: .8125rem; color: var(--ink-3); }
+    .stepper li { display: flex; align-items: center; gap: .45rem; }
+    .stepper .dot { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace;
+      font-size: .7rem; font-weight: 700; background: var(--paper-2); color: var(--ink-3); transition: all .3s; }
+    .stepper .bar { width: 28px; height: 2px; border-radius: 2px; background: var(--line); transition: background .3s; }
+    .stepper li.is-now { color: var(--ink); font-weight: 600; }
+    .stepper li.is-now .dot { background: var(--accent); color: #fff; }
+    .stepper li.is-done .dot { background: var(--accent-soft); color: var(--accent); }
+    .stepper li.is-done + .bar { background: var(--accent); }
+    .stepper li.is-ok { color: var(--ok); font-weight: 600; }
+    .stepper li.is-ok .dot { background: var(--ok); color: #fff; }
+    .stepper li.is-bad { color: var(--bad); font-weight: 600; }
+    .stepper li.is-bad .dot { background: var(--bad); color: #fff; }
+ 
+    /* 브라우저 창 */
+    .window { background: var(--surface); border-radius: 22px; box-shadow: var(--shadow); outline: 1px solid rgba(22,24,29,.07); }
+    .window-bar { background: var(--paper-2); border-bottom: 1px solid var(--line); }
+    .url { background: var(--surface); border: 1px solid var(--line); }
+    .field { width: 100%; padding: .7rem .9rem .7rem 2.5rem; border-radius: 12px; background: var(--paper); border: 1px solid var(--line);
+      font-family: 'JetBrains Mono', monospace; font-size: .875rem; color: var(--ink-3); cursor: not-allowed; user-select: none; }
+    .otp-field { width: 13rem; text-align: center; letter-spacing: .38em; padding: .8rem .5rem .8rem .9rem; font-family: 'JetBrains Mono', monospace;
+      font-size: 1.75rem; font-weight: 700; border-radius: 14px; background: #fff; border: 1.5px solid var(--line); color: var(--ink);
+      transition: border-color .2s, box-shadow .2s; font-variant-numeric: tabular-nums; }
+    .otp-field::placeholder { color: #c9c6be; }
+    .otp-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(13,106,126,.15); }
+    .otp-field.border-rose-500 { border-color: var(--bad); box-shadow: 0 0 0 4px rgba(189,66,46,.12); }
+    .kv { display: flex; justify-content: space-between; gap: 1rem; padding: .55rem 0; border-top: 1px dashed var(--line); }
+    .kv:first-child { border-top: 0; }
+    .kv dt { color: var(--ink-3); }
+    .kv dd { color: var(--ink); font-weight: 500; }
+    .loc.is-alert { color: var(--bad); font-weight: 700; }
+    .emblem { width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center; }
+    .tag { display: inline-flex; align-items: center; gap: .35rem; font-size: .75rem; font-weight: 600; padding: .25rem .55rem; border-radius: 7px; }
+ 
+    /* 스마트폰 */
     .phone-mockup {
-      width: 320px;
-      height: 640px;
-      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35), 0 0 0 10px #1e293b, 0 0 0 12px #334155;
+      width: 320px; height: 640px; background: #0b0c0f;
+      box-shadow: 0 0 0 1.5px #2b2e35, 0 0 0 7px #16181d, 0 0 0 8px #383c45, 0 40px 70px -30px rgba(22, 24, 29, .55), 0 18px 30px -20px rgba(13, 106, 126, .35);
     }
-
-    @keyframes pulse-ring {
-      0% {
-        transform: scale(0.95);
-        opacity: 0.8;
-      }
-
-      50% {
-        transform: scale(1.05);
-        opacity: 0.4;
-      }
-
-      100% {
-        transform: scale(0.95);
-        opacity: 0.8;
-      }
-    }
-
-    .pulse-animation {
-      animation: pulse-ring 2s infinite ease-in-out;
-    }
-
-    @keyframes shake {
-
-      0%,
-      100% {
-        transform: translateX(0);
-      }
-
-      20%,
-      60% {
-        transform: translateX(-6px);
-      }
-
-      40%,
-      80% {
-        transform: translateX(6px);
-      }
-    }
-
-    .shake-animate {
-      animation: shake 0.4s ease-in-out;
+    .screen { background: radial-gradient(420px 260px at 50% -10%, rgba(95, 182, 200, .12), transparent 70%), #121419; }
+    .p-card { background: #1b1e25; border: 1px solid #262a33; box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+    .ploc.is-alert { color: #f08a78; font-weight: 700; }
+ 
+    @keyframes pulse-ring { 0%,100% { transform: scale(.92); opacity: .75; } 50% { transform: scale(1.12); opacity: .25; } }
+    .pulse-animation { animation: pulse-ring 2.2s infinite ease-in-out; }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
+    .shake-animate { animation: shake .4s ease-in-out; }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    .reveal { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--d, 0) * 90ms); }
+    [id^="pc-step-"]:not(.hidden) { animation: rise .45s cubic-bezier(.2,.7,.2,1) both; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
     }
   </style>
 </head>
-
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between">
-
-  <!-- 헤더 영역 -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center space-x-3">
-        <div class="bg-indigo-600 text-white p-2 rounded-xl shadow-md">
-          <i data-lucide="shield-check" class="w-6 h-6"></i>
-        </div>
-        <div>
-          <h1 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-            2단계 인증(2FA) 체험 실습실
-            <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-semibold">교육용</span>
-          </h1>
-          <p class="text-xs text-slate-500">학생들이 두 화면을 직접 보며 보안 원리를 이해할 수 있는 시뮬레이터</p>
+ 
+<body class="font-sans min-h-[100dvh]">
+<div class="wrap flex flex-col min-h-[100dvh]">
+ 
+  <!-- 헤더 -->
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-[#f3f2ee]/80 border-b border-[#dad7cf]/70">
+    <div class="max-w-[1240px] mx-auto px-5 sm:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-[11px] bg-[#16181d] grid place-items-center font-mono text-[11px] font-bold text-[#88d0dc] tracking-tight">2FA</div>
+        <div class="leading-tight">
+          <p class="text-[15px] font-semibold tracking-[-0.01em]">2단계 인증 체험 실습실</p>
+          <p class="text-xs text-[#737780]">중학교 정보 · 정보보안</p>
         </div>
       </div>
-
-      <!-- 모드 선택 탭 -->
-      <div class="flex items-center bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-        <button id="tab-demo1" onclick="switchMode('code')"
-          class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 bg-white text-indigo-600 shadow-sm">
-          <i data-lucide="key-round" class="w-4 h-4"></i>
-          <span>데모 1: 일회용 코드(OTP) 입력</span>
+ 
+      <nav class="seg" aria-label="체험 방식 선택">
+        <button id="tab-demo1" onclick="switchMode('code')" class="seg-btn is-active">
+          <span class="seg-num">01</span><span>인증코드(OTP)</span>
         </button>
-        <button id="tab-demo2" onclick="switchMode('push')"
-          class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 text-slate-600 hover:text-slate-900">
-          <i data-lucide="smartphone" class="w-4 h-4"></i>
-          <span>데모 2: 푸시 알림 원터치 승인</span>
+        <button id="tab-demo2" onclick="switchMode('push')" class="seg-btn">
+          <span class="seg-num">02</span><span>푸시 승인</span>
         </button>
-      </div>
-
-      <!-- 리셋 및 공격 체험 버튼 -->
+      </nav>
+ 
       <div class="flex items-center gap-2">
-        <button onclick="triggerHackerScenario()"
-          class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 rounded-lg text-xs font-semibold flex items-center gap-1 transition"
-          title="비밀번호가 유출되어 다른 사람이 로그인을 시도했을 때의 상황을 체험합니다.">
-          <i data-lucide="skull" class="w-3.5 h-3.5"></i>
-          <span>해킹 방어 체험</span>
+        <button onclick="triggerHackerScenario()" class="btn px-3.5 py-2 text-sm bg-[#f6e4df] text-[#9e3524] hover:bg-[#f0d6ce]"
+          title="비밀번호가 유출되어 다른 사람이 로그인을 시도하는 상황을 체험합니다.">
+          <i data-lucide="radar" class="w-4 h-4"></i><span>해킹 방어 체험</span>
         </button>
-        <button onclick="resetAllState()"
-          class="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg border border-slate-200 transition"
-          title="처음 상태로 되돌리기">
+        <button onclick="resetAllState()" class="btn btn-quiet w-9 h-9" title="처음 상태로 되돌리기" aria-label="처음 상태로 되돌리기">
           <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
         </button>
       </div>
     </div>
   </header>
-
-  <!-- 가이드 배너 -->
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-4 w-full">
-    <div id="guide-banner" class="bg-blue-50 border border-blue-200 rounded-xl p-3.5 flex items-start gap-3 shadow-xs">
-      <i data-lucide="info" class="w-5 h-5 text-blue-600 shrink-0 mt-0.5"></i>
-      <div class="text-xs sm:text-sm text-blue-900">
-        <strong id="guide-title" class="font-bold">데모 1: 인증코드(OTP) 방식이란?</strong>
-        <p id="guide-desc" class="text-blue-800/90 mt-0.5">
-          왼쪽 PC에서 로그인 버튼을 누르면, 오른쪽 스마트폰 인증기에 30초마다 바뀌는 6자리 번호가 나타납니다. 그 번호를 PC에 입력해 보세요!
-        </p>
-      </div>
+ 
+  <!-- 인트로 + 가이드 -->
+  <section class="max-w-[1240px] w-full mx-auto px-5 sm:px-8 pt-10 pb-8 grid lg:grid-cols-[1.1fr_1fr] gap-6 lg:gap-12 items-end">
+    <div class="reveal" style="--d:0">
+      <p class="font-mono text-xs text-[#0d6a7e] mb-3">비밀번호 + 내 스마트폰</p>
+      <h1 class="text-[2rem] sm:text-[2.6rem] leading-[1.15] font-bold">비밀번호 하나로는<br>계정을 지킬 수 없어요</h1>
     </div>
-  </div>
-
-  <!-- 메인 시뮬레이션 영역: 좌측 PC / 우측 모바일 -->
-  <main
-    class="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full flex-1 flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8">
-
-    <!-- [왼쪽] 내 컴퓨터 (웹 브라우저) -->
-    <section
-      class="w-full max-w-xl bg-white rounded-2xl border border-slate-300 shadow-xl overflow-hidden flex flex-col">
-      <!-- 브라우저 창 헤더 -->
-      <div class="bg-slate-800 text-slate-300 px-4 py-2.5 flex items-center justify-between text-xs select-none">
-        <div class="flex items-center space-x-2">
-          <div class="w-3 h-3 rounded-full bg-rose-500"></div>
-          <div class="w-3 h-3 rounded-full bg-amber-500"></div>
-          <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-          <span class="ml-2 font-medium text-slate-300 flex items-center gap-1">
-            <i data-lucide="laptop" class="w-3.5 h-3.5"></i> 내 컴퓨터 (PC 로그인 화면)
-          </span>
+    <div id="guide-banner" class="reveal border-l-2 border-[#0d6a7e] pl-5 py-1" style="--d:1">
+      <strong id="guide-title" class="block text-[15px] font-semibold">데모 1: 일회용 인증코드(OTP) 방식</strong>
+      <p id="guide-desc" class="mt-1.5 text-[15px] leading-relaxed text-[#474b54] max-w-[46ch]">
+        왼쪽 PC에서 로그인을 누르면 오른쪽 스마트폰에 30초마다 바뀌는 6자리 번호가 나타납니다. 그 번호를 PC에 입력해 보세요.
+      </p>
+    </div>
+  </section>
+ 
+  <!-- 메인: PC / 스마트폰 -->
+  <main class="max-w-[1240px] w-full mx-auto px-5 sm:px-8 pb-16 flex-1 grid lg:grid-cols-[minmax(0,1fr)_auto] gap-10 lg:gap-14 items-start">
+ 
+    <!-- PC 브라우저 -->
+    <section class="window overflow-hidden flex flex-col reveal" style="--d:2" aria-label="PC 로그인 화면">
+      <div class="window-bar px-4 py-3 flex items-center gap-3 text-xs select-none">
+        <div class="flex gap-1.5 shrink-0">
+          <span class="w-3 h-3 rounded-full bg-[#e0786a]"></span>
+          <span class="w-3 h-3 rounded-full bg-[#e2b25a]"></span>
+          <span class="w-3 h-3 rounded-full bg-[#79b88e]"></span>
         </div>
-        <div
-          class="bg-slate-700/80 px-3 py-1 rounded-md text-[11px] text-slate-300 flex items-center gap-1.5 w-60 truncate">
-          <i data-lucide="lock" class="w-3 h-3 text-emerald-400"></i>
-          https://school.portal.kr/login
+        <div class="url flex-1 max-w-sm mx-auto rounded-lg px-3 py-1.5 flex items-center gap-2 text-[#474b54] font-mono text-[12px] truncate">
+          <i data-lucide="lock" class="w-3.5 h-3.5 text-[#2a8455] shrink-0"></i>school.portal.kr/login
         </div>
+        <span class="hidden sm:flex items-center gap-1.5 text-[#737780] shrink-0"><i data-lucide="laptop" class="w-3.5 h-3.5"></i>내 컴퓨터</span>
       </div>
-
-      <!-- 브라우저 컨텐츠 본문 -->
-      <div class="p-6 sm:p-8 flex-1 flex flex-col justify-center min-h-[500px]">
-
-        <!-- 단계 1: 일반 ID / 비밀번호 입력 (공통) -->
-        <div id="pc-step-login" class="space-y-5">
-          <div class="text-center space-y-1">
-            <div class="inline-flex p-3 bg-indigo-50 text-indigo-600 rounded-2xl mb-2">
-              <i data-lucide="graduation-cap" class="w-8 h-8"></i>
-            </div>
-            <h2 class="text-xl font-bold text-slate-900">학교 포털 로그인</h2>
-            <p class="text-xs text-slate-500">1단계: 먼저 기억하고 있는 비밀번호를 입력합니다.</p>
-          </div>
-
-          <div class="space-y-3 max-w-sm mx-auto">
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">아이디(학번 또는 이메일)</label>
-              <div class="relative">
-                <i data-lucide="user" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+ 
+      <!-- 단계 표시 -->
+      <div class="px-6 sm:px-10 pt-7">
+        <ol id="stepper" class="stepper max-w-sm mx-auto" aria-label="진행 단계">
+          <li data-step="1" class="is-now"><span class="dot">1</span>비밀번호</li>
+          <li class="bar" aria-hidden="true"></li>
+          <li data-step="2"><span class="dot">2</span>기기 확인</li>
+          <li class="bar" aria-hidden="true"></li>
+          <li data-step="3"><span class="dot">3</span>결과</li>
+        </ol>
+      </div>
+ 
+      <div class="px-6 sm:px-10 pt-8 pb-10 flex-1 flex flex-col justify-center min-h-[470px]">
+ 
+        <!-- 1단계: 로그인 -->
+        <div id="pc-step-login" class="max-w-sm w-full mx-auto">
+          <h2 class="text-2xl font-bold">학교 포털 로그인</h2>
+          <p class="text-sm text-[#737780] mt-1.5">1단계 · 내가 알고 있는 비밀번호를 입력해요.</p>
+ 
+          <div class="mt-7 space-y-4">
+            <label class="block">
+              <span class="block text-[13px] font-medium text-[#474b54] mb-1.5">아이디</span>
+              <span class="relative block">
+                <i data-lucide="at-sign" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#737780]"></i>
                 <input id="pc-input-id" type="text" value="student2026@school.kr" readonly tabindex="-1" aria-readonly="true"
-                  autocomplete="off" title="실습용 가상 계정이라 바꿀 수 없어요"
-                  class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none bg-slate-100 font-mono text-slate-500 cursor-not-allowed select-none">
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">비밀번호</label>
-              <div class="relative">
-                <i data-lucide="key" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
-                <input id="pc-input-pw" type="password" value="mypassword1234!" readonly tabindex="-1" aria-readonly="true"
-                  autocomplete="off" title="실습용 가상 계정이라 바꿀 수 없어요"
-                  class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none bg-slate-100 font-mono text-slate-500 cursor-not-allowed select-none">
-              </div>
-            </div>
-
-            <div class="pt-2">
-              <button onclick="handlePcLoginSubmit()"
-                class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-2.5 px-4 rounded-lg text-sm shadow-md transition flex items-center justify-center gap-2">
-                <span>로그인하기</span>
-                <i data-lucide="arrow-right" class="w-4 h-4"></i>
-              </button>
-            </div>
-
-            <p class="text-[11px] text-center text-slate-400 pt-1">
-              💡 실습용 <b>가상 계정</b>이 미리 입력되어 있어요. 실제 아이디·비밀번호는 입력하지 않아요.
-            </p>
-          </div>
-        </div>
-
-        <!-- 단계 2 (데모1): OTP 코드 입력 대기 화면 -->
-        <div id="pc-step-otp" class="hidden space-y-5 text-center">
-          <div class="inline-flex p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
-            <i data-lucide="shield-alert" class="w-8 h-8"></i>
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-slate-900">2단계 인증: 일회용 보안코드</h2>
-            <p class="text-xs text-slate-500 mt-1">
-              오른쪽 스마트폰 앱에 나타난 <strong class="text-indigo-600">6자리 인증코드</strong>를 입력해 주세요.
-            </p>
-          </div>
-
-          <div class="max-w-xs mx-auto space-y-4">
-            <!-- 6자리 입력란 -->
-            <div class="flex justify-center gap-2">
-              <input type="text" maxlength="6" id="pc-otp-input" placeholder="000000"
-                class="w-48 text-center tracking-[0.4em] font-mono text-2xl font-bold py-2 border-2 border-indigo-300 rounded-xl focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
-            </div>
-
-            <div id="pc-otp-error"
-              class="hidden text-xs text-rose-600 font-semibold flex items-center justify-center gap-1">
-              <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
-              <span>코드가 일치하지 않습니다. 스마트폰을 확인하세요!</span>
-            </div>
-
-            <div class="flex gap-2">
-              <button onclick="verifyOtpCode()"
-                class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm shadow-md transition">
-                인증 확인
-              </button>
-              <button onclick="autoFillCode()"
-                class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition"
-                title="스마트폰 코드를 자동으로 가져와 입력합니다.">
-                자동 입력
-              </button>
-            </div>
-
-            <button onclick="cancelVerification()" class="text-xs text-slate-400 hover:text-slate-600 underline">
-              ← 로그인 처음으로 돌아가기
-            </button>
-          </div>
-        </div>
-
-        <!-- 단계 2 (데모2): 모바일 푸시 승인 대기 화면 -->
-        <div id="pc-step-push-wait" class="hidden space-y-6 text-center">
-          <div class="relative w-20 h-20 mx-auto">
-            <div class="absolute inset-0 rounded-full bg-indigo-100 pulse-animation"></div>
-            <div
-              class="relative w-full h-full bg-white rounded-full border-2 border-indigo-500 flex items-center justify-center text-indigo-600 shadow-inner">
-              <i data-lucide="smartphone-nfc" class="w-9 h-9"></i>
-            </div>
-          </div>
-
-          <div>
-            <h2 class="text-xl font-bold text-slate-900">모바일 승인 요청 중...</h2>
-            <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">
-              등록된 스마트폰으로 인증 알림을 보냈습니다.<br>
-              스마트폰 화면에서 <strong class="text-indigo-600 font-semibold">[승인]</strong> 버튼을 터치해 주세요.
-            </p>
-          </div>
-
-          <div
-            class="bg-slate-50 border border-slate-200 p-4 rounded-xl max-w-xs mx-auto text-left text-xs space-y-1.5 text-slate-600">
-            <div class="flex justify-between">
-              <span class="text-slate-400">요청 기기:</span>
-              <span class="font-medium text-slate-800">Chrome (Windows 11)</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-400">요청 위치:</span>
-              <span id="pc-request-location" class="font-medium text-slate-800">대한민국 서울</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-400">상태:</span>
-              <span class="font-bold text-amber-600 flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-                스마트폰 응답 대기 중
+                  autocomplete="off" title="실습용 가상 계정이라 바꿀 수 없어요" class="field">
               </span>
-            </div>
-          </div>
-
-          <div>
-            <button onclick="cancelVerification()" class="text-xs text-slate-400 hover:text-slate-600 underline">
-              인증 요청 취소하기
+            </label>
+            <label class="block">
+              <span class="block text-[13px] font-medium text-[#474b54] mb-1.5">비밀번호</span>
+              <span class="relative block">
+                <i data-lucide="key-round" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#737780]"></i>
+                <input id="pc-input-pw" type="password" value="mypassword1234!" readonly tabindex="-1" aria-readonly="true"
+                  autocomplete="off" title="실습용 가상 계정이라 바꿀 수 없어요" class="field">
+              </span>
+            </label>
+ 
+            <button onclick="handlePcLoginSubmit()" class="btn btn-primary w-full py-3 text-[15px] !mt-6">
+              <span>로그인하기</span><i data-lucide="arrow-right" class="w-4 h-4"></i>
             </button>
-          </div>
-        </div>
-
-        <!-- 단계 3: 로그인 성공 결과 화면 -->
-        <div id="pc-step-success" class="hidden space-y-5 text-center">
-          <div
-            class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full mx-auto flex items-center justify-center shadow-md">
-            <i data-lucide="badge-check" class="w-10 h-10"></i>
-          </div>
-          <div>
-            <span
-              class="px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-full">
-              2단계 인증 통과
-            </span>
-            <h2 class="text-2xl font-extrabold text-slate-900 mt-2">로그인에 성공했습니다! 🎉</h2>
-            <p class="text-xs text-slate-500 mt-1">
-              비밀번호(1단계)와 스마트폰 본인 인증(2단계)이 모두 완료되었습니다.
+ 
+            <p class="flex gap-2 text-[13px] leading-relaxed text-[#737780] pt-1">
+              <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
+              <span>실습용 <b class="font-semibold text-[#474b54]">가상 계정</b>이 미리 입력되어 있어요. 실제 아이디·비밀번호는 입력하지 않아요.</span>
             </p>
           </div>
-
-          <div
-            class="p-4 bg-emerald-50/70 border border-emerald-100 rounded-xl text-left max-w-sm mx-auto text-xs space-y-2 text-emerald-900">
-            <div class="flex items-center gap-2 font-bold text-emerald-800">
-              <i data-lucide="shield" class="w-4 h-4"></i> 보안 인증 로그
+        </div>
+ 
+        <!-- 2단계(데모1): OTP 입력 -->
+        <div id="pc-step-otp" class="hidden max-w-sm w-full mx-auto">
+          <span class="tag bg-[#dcecef] text-[#0a5667]"><i data-lucide="key-square" class="w-3.5 h-3.5"></i>2단계 인증</span>
+          <h2 class="text-2xl font-bold mt-3">일회용 보안코드 입력</h2>
+          <p class="text-sm text-[#474b54] mt-1.5 leading-relaxed">
+            오른쪽 스마트폰 앱에 나타난 <strong class="font-semibold text-[#0a5667]">6자리 인증코드</strong>를 입력해 주세요.
+          </p>
+ 
+          <div class="mt-7 space-y-4">
+            <input type="text" maxlength="6" id="pc-otp-input" placeholder="000000" inputmode="numeric" autocomplete="off" class="otp-field">
+ 
+            <div id="pc-otp-error" class="hidden text-[13px] text-[#bd422e] font-medium flex items-center gap-1.5">
+              <i data-lucide="circle-alert" class="w-4 h-4"></i>
+              <span>코드가 일치하지 않아요. 스마트폰을 다시 확인해 보세요.</span>
             </div>
-            <p class="text-emerald-700">
-              ✔ 사용자 ID: <span class="font-mono">student2026@school.kr</span><br>
-              ✔ 2단계 인증 방식: <span id="success-auth-type" class="font-semibold">일회용 OTP 코드</span><br>
-              ✔ 인증 시간: <span id="success-time" class="font-mono">방금 전</span>
-            </p>
+ 
+            <div class="flex gap-2">
+              <button onclick="verifyOtpCode()" class="btn btn-accent flex-1 py-3 text-[15px]">인증 확인</button>
+              <button onclick="autoFillCode()" class="btn btn-quiet px-4 py-3 text-sm" title="스마트폰 코드를 자동으로 가져와 입력합니다.">자동 입력</button>
+            </div>
+ 
+            <button onclick="cancelVerification()" class="link-quiet">로그인 처음으로 돌아가기</button>
           </div>
-
-          <button onclick="resetAllState()"
-            class="px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl shadow transition inline-flex items-center gap-2">
-            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-            <span>다시 체험해보기</span>
+        </div>
+ 
+        <!-- 2단계(데모2): 푸시 대기 -->
+        <div id="pc-step-push-wait" class="hidden max-w-sm w-full mx-auto">
+          <div class="flex items-center gap-4">
+            <div class="relative w-16 h-16 shrink-0">
+              <div class="absolute inset-0 rounded-[20px] bg-[#dcecef] pulse-animation"></div>
+              <div class="relative w-full h-full rounded-[20px] bg-[#fbfaf8] border border-[#0d6a7e]/40 grid place-items-center text-[#0d6a7e]">
+                <i data-lucide="smartphone" class="w-7 h-7"></i>
+              </div>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold">스마트폰 승인을 기다려요</h2>
+              <p class="text-sm text-[#737780] mt-1">2단계 · 내가 가진 기기로 확인해요.</p>
+            </div>
+          </div>
+ 
+          <p class="text-sm text-[#474b54] mt-6 leading-relaxed">
+            등록된 스마트폰으로 인증 알림을 보냈어요. 스마트폰 화면에서 <strong class="font-semibold text-[#0a5667]">승인</strong>을 눌러 주세요.
+          </p>
+ 
+          <dl class="mt-5 rounded-2xl bg-[#f3f2ee] px-4 py-2 text-[13px] tnum">
+            <div class="kv"><dt>요청 기기</dt><dd>Chrome · Windows 11</dd></div>
+            <div class="kv"><dt>요청 위치</dt><dd id="pc-request-location" class="loc">대한민국 서울</dd></div>
+            <div class="kv"><dt>상태</dt>
+              <dd class="flex items-center gap-2 !text-[#a86d12] font-semibold">
+                <span class="relative flex w-2 h-2"><span class="absolute inset-0 rounded-full bg-[#e2b25a] animate-ping"></span><span class="relative w-2 h-2 rounded-full bg-[#a86d12]"></span></span>
+                응답 대기 중
+              </dd>
+            </div>
+          </dl>
+ 
+          <button onclick="cancelVerification()" class="link-quiet mt-5">인증 요청 취소하기</button>
+        </div>
+ 
+        <!-- 결과: 성공 -->
+        <div id="pc-step-success" class="hidden max-w-sm w-full mx-auto">
+          <div class="emblem bg-[#e1f0e6] text-[#2a8455]"><i data-lucide="badge-check" class="w-8 h-8"></i></div>
+          <div class="mt-5"><span class="tag bg-[#e1f0e6] text-[#1f6a43]">2단계 인증 통과</span></div>
+          <h2 class="text-[1.75rem] font-bold mt-2">로그인에 성공했어요</h2>
+          <p class="text-sm text-[#474b54] mt-1.5 leading-relaxed">비밀번호(1단계)와 스마트폰 확인(2단계)이 모두 끝났어요.</p>
+ 
+          <dl class="mt-6 rounded-2xl bg-[#f3f2ee] px-4 py-2 text-[13px]">
+            <div class="kv"><dt>사용자 ID</dt><dd class="font-mono">student2026@school.kr</dd></div>
+            <div class="kv"><dt>2단계 방식</dt><dd id="success-auth-type">일회용 OTP 코드</dd></div>
+            <div class="kv"><dt>인증 시간</dt><dd id="success-time" class="font-mono tnum">방금 전</dd></div>
+          </dl>
+ 
+          <button onclick="resetAllState()" class="btn btn-primary px-5 py-3 text-sm mt-6">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i><span>다시 체험해보기</span>
           </button>
         </div>
-
-        <!-- 단계 3 (오류): 거부됨 / 차단 화면 -->
-        <div id="pc-step-denied" class="hidden space-y-5 text-center">
-          <div
-            class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full mx-auto flex items-center justify-center shadow-md">
-            <i data-lucide="shield-x" class="w-10 h-10"></i>
+ 
+        <!-- 결과: 차단 -->
+        <div id="pc-step-denied" class="hidden max-w-sm w-full mx-auto">
+          <div class="emblem bg-[#f6e4df] text-[#bd422e]"><i data-lucide="shield-x" class="w-8 h-8"></i></div>
+          <div class="mt-5"><span class="tag bg-[#f6e4df] text-[#9e3524]">로그인 차단됨</span></div>
+          <h2 class="text-[1.75rem] font-bold mt-2">스마트폰에서 접근을 거부했어요</h2>
+          <p class="text-sm text-[#474b54] mt-1.5 leading-relaxed">
+            스마트폰 주인이 본인 요청이 아니라고 판단해 승인을 거부했고, 계정 접근이 바로 막혔어요.
+          </p>
+ 
+          <div class="mt-6 flex gap-3 rounded-2xl bg-[#f6e4df]/60 p-4 text-[13px] leading-relaxed text-[#6e2a1f]">
+            <i data-lucide="lock-keyhole" class="w-4 h-4 shrink-0 mt-0.5 text-[#bd422e]"></i>
+            <p>비밀번호가 해커에게 알려졌더라도 스마트폰에서 승인하지 않았기 때문에 계정이 안전하게 지켜졌어요.</p>
           </div>
-          <div>
-            <span class="px-2.5 py-1 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-full">
-              로그인 차단됨
-            </span>
-            <h2 class="text-xl font-bold text-slate-900 mt-2">스마트폰에서 접근을 거부했습니다!</h2>
-            <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              스마트폰 소유자가 승인을 거부했거나 본인 요청이 아니라고 판단하여 계정 접근이 즉시 차단되었습니다.
-            </p>
-          </div>
-
-          <div
-            class="p-4 bg-rose-50 border border-rose-100 rounded-xl text-left max-w-sm mx-auto text-xs space-y-1 text-rose-900">
-            <p class="font-bold flex items-center gap-1.5 text-rose-800">
-              <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600"></i>
-              보안 알림
-            </p>
-            <p class="text-rose-700 leading-relaxed">
-              비밀번호가 해커에게 노출되었더라도, 스마트폰에서 승인하지 않았기 때문에 계정이 안전하게 지켜졌습니다!
-            </p>
-          </div>
-
-          <button onclick="resetAllState()"
-            class="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl transition">
-            처음으로 돌아가기
-          </button>
+ 
+          <button onclick="resetAllState()" class="btn btn-primary px-5 py-3 text-sm mt-6">처음으로 돌아가기</button>
         </div>
-
       </div>
-
-      <!-- 브라우저 하단 상태바 -->
-      <div
-        class="bg-slate-50 border-t border-slate-200 px-4 py-2 text-[11px] text-slate-500 flex justify-between items-center">
-        <span>보안 상태: <strong id="pc-status-text" class="text-slate-700 font-semibold">1단계 대기 중</strong></span>
-        <span class="font-mono text-slate-400">TLS 1.3 암호화됨</span>
+ 
+      <div class="border-t border-[#dad7cf] px-5 py-2.5 text-xs text-[#737780] flex justify-between items-center gap-3">
+        <span>보안 상태 · <strong id="pc-status-text" class="text-[#16181d] font-semibold">1단계 대기 중</strong></span>
+        <span class="font-mono hidden sm:inline">TLS 1.3</span>
       </div>
     </section>
-
-
-    <!-- [오른쪽] 내 스마트폰 (인증 앱 뷰어) -->
-    <section class="flex flex-col items-center">
-      <div class="flex items-center gap-1.5 mb-3 text-xs font-semibold text-slate-600">
-        <i data-lucide="smartphone" class="w-4 h-4 text-indigo-600"></i>
-        <span>내 스마트폰 (2단계 인증기)</span>
-      </div>
-
-      <!-- 스마트폰 프레임 목업 -->
-      <div
-        class="phone-mockup rounded-[42px] bg-slate-950 p-3 relative flex flex-col justify-between overflow-hidden select-none border-4 border-slate-700">
-
-        <!-- 상단 다이내믹 아일랜드 / 스피커 노치 -->
-        <div
-          class="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-5 bg-black rounded-full z-40 flex items-center justify-between px-2.5">
-          <div class="w-2 h-2 rounded-full bg-slate-800"></div>
-          <div class="w-2.5 h-2.5 rounded-full bg-indigo-950 border border-slate-700"></div>
-        </div>
-
-        <!-- 스마트폰 화면 내부 컨테이너 -->
-        <div
-          class="w-full h-full bg-slate-900 rounded-[32px] overflow-hidden flex flex-col justify-between text-white relative">
-
-          <!-- 이스터에그: 상단 문자 알림 배너 -->
+ 
+    <!-- 스마트폰 -->
+    <section class="flex flex-col items-center lg:pt-2 reveal" style="--d:3" aria-label="스마트폰 인증기 화면">
+      <p class="mb-4 text-[13px] font-medium text-[#474b54] flex items-center gap-2">
+        <i data-lucide="smartphone" class="w-4 h-4 text-[#0d6a7e]"></i>내 스마트폰 · 인증기 앱
+      </p>
+ 
+      <div class="phone-mockup rounded-[46px] p-[10px] relative flex flex-col overflow-hidden select-none">
+        <div class="absolute top-[18px] left-1/2 -translate-x-1/2 w-[92px] h-[26px] bg-black rounded-full z-40"></div>
+ 
+        <div class="screen w-full h-full rounded-[37px] overflow-hidden flex flex-col text-white relative">
+ 
+          <!-- 문자 알림 배너 -->
           <div id="phone-sms-banner"
-            class="hidden absolute top-2.5 left-2.5 right-2.5 z-50 bg-slate-800/95 border border-rose-500/80 shadow-2xl rounded-2xl p-2.5 text-slate-100 backdrop-blur-md transition-all duration-300 transform -translate-y-12 opacity-0">
-            <div class="flex items-center justify-between mb-1 text-[10px] text-slate-400">
-              <div class="flex items-center gap-1 font-semibold text-rose-400">
-                <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
-                <span>메시지 (알림)</span>
+            class="hidden absolute top-3 left-3 right-3 z-50 bg-[#1f2229]/95 border border-[#f08a78]/50 shadow-2xl rounded-[20px] p-3 text-[#e7e8ea] backdrop-blur-md transition-all duration-300 transform -translate-y-12 opacity-0">
+            <div class="flex items-center justify-between mb-1 text-[11px] text-[#9aa0aa]">
+              <div class="flex items-center gap-1.5 font-semibold text-[#f08a78]">
+                <i data-lucide="message-square" class="w-3.5 h-3.5"></i><span>메시지</span>
               </div>
               <div class="flex items-center gap-1.5">
-                <span class="text-[9px]">지금</span>
-                <button onclick="dismissSmsBanner()" class="text-slate-400 hover:text-white p-0.5">
-                  <i data-lucide="x" class="w-3 h-3"></i>
-                </button>
+                <span>지금</span>
+                <button onclick="dismissSmsBanner()" class="text-[#9aa0aa] hover:text-white p-0.5" aria-label="알림 닫기"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
               </div>
             </div>
-            <div id="sms-text-content" class="text-[11px] leading-snug font-medium text-slate-200 break-keep"></div>
+            <div id="sms-text-content" class="text-[12px] leading-snug font-medium text-[#e7e8ea]"></div>
           </div>
-
-          <!-- 모바일 상단 상태 표시줄 -->
-          <div class="pt-3 px-6 pb-2 flex justify-between items-center text-[11px] text-slate-300 z-30 font-medium">
+ 
+          <!-- 상태 표시줄 -->
+          <div class="pt-[18px] px-7 pb-2 flex justify-between items-center text-[12px] text-[#c9ccd2] font-semibold font-mono tnum">
             <span id="phone-clock">09:41</span>
-            <div class="flex items-center space-x-1.5">
-              <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
-              <i data-lucide="battery-charging" class="w-3.5 h-3.5"></i>
-            </div>
+            <span class="flex items-center gap-1.5"><i data-lucide="wifi" class="w-3.5 h-3.5"></i><i data-lucide="battery-medium" class="w-4 h-4"></i></span>
           </div>
-
-          <!-- 모바일 컨텐츠 영역 -->
-          <div class="flex-1 flex flex-col px-4 py-2 relative">
-
-            <!-- 스마트폰 앱 헤더 -->
-            <div class="flex items-center justify-between py-2 border-b border-slate-800">
-              <div class="flex items-center space-x-2">
-                <div
-                  class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-xs">
-                  2FA
-                </div>
+ 
+          <div class="flex-1 flex flex-col px-4 pt-5 relative">
+            <!-- 앱 헤더 -->
+            <div class="flex items-center justify-between pb-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-[10px] bg-[#88d0dc] text-[#0b3a44] grid place-items-center font-mono text-[10px] font-bold">2FA</div>
                 <div>
-                  <h3 class="text-xs font-bold leading-tight">학교 모바일 인증기</h3>
-                  <p class="text-[9px] text-slate-400">보안 키 등록됨</p>
+                  <p class="text-[13px] font-semibold leading-tight">학교 인증기</p>
+                  <p class="text-[11px] text-[#8b909a]">보안 키 등록됨</p>
                 </div>
               </div>
-              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span class="flex items-center gap-1.5 text-[11px] text-[#7fcf9d]"><span class="w-1.5 h-1.5 rounded-full bg-[#7fcf9d]"></span>보호 중</span>
             </div>
-
-            <!-- [모바일 화면 - 데모 1: OTP 코드 표시기] -->
-            <div id="phone-view-demo1" class="flex-1 flex flex-col justify-center space-y-4 py-4">
-              <div
-                class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 text-center shadow-lg relative overflow-hidden">
-                <div class="text-[11px] font-medium text-slate-400 mb-1 flex items-center justify-center gap-1">
-                  <i data-lucide="shield" class="w-3.5 h-3.5 text-indigo-400"></i>
-                  <span>학교 포털 (student2026)</span>
+ 
+            <!-- 데모1: OTP -->
+            <div id="phone-view-demo1" class="flex-1 flex flex-col gap-3 pt-3">
+              <div class="p-card rounded-[22px] p-4">
+                <div class="text-[12px] text-[#9aa0aa] flex items-center gap-1.5">
+                  <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-[#88d0dc]"></i><span>학교 포털 · student2026</span>
                 </div>
-
-                <!-- OTP 6자리 숫자 -->
-                <div class="py-3">
-                  <div id="phone-otp-digits"
-                    class="font-mono text-3xl font-extrabold tracking-widest text-indigo-300 select-all">
-                    ------
-                  </div>
-                  <p id="phone-otp-helper" class="text-[10px] text-slate-500 mt-1">
-                    PC에서 로그인을 시작하면 코드가 생성됩니다.
-                  </p>
+                <div id="phone-otp-digits" class="font-mono tnum text-[2.35rem] leading-none font-bold tracking-[.08em] text-[#e9f6f8] mt-4 select-all">------</div>
+                <p id="phone-otp-helper" class="text-[11.5px] text-[#8b909a] mt-2 leading-snug">PC에서 로그인을 시작하면 코드가 생성됩니다.</p>
+ 
+                <div class="w-full bg-[#2a2e37] h-1 rounded-full overflow-hidden mt-4">
+                  <div id="phone-timer-bar" class="bg-[#88d0dc] h-full w-0 transition-all duration-1000 ease-linear"></div>
                 </div>
-
-                <!-- 30초 타이머 진행 바 -->
-                <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden mt-1">
-                  <div id="phone-timer-bar" class="bg-indigo-500 h-full w-0 transition-all duration-1000 linear"></div>
-                </div>
-
-                <div class="flex justify-between items-center text-[10px] text-slate-400 mt-2">
-                  <span>갱신 주기: 30초</span>
-                  <span id="phone-timer-text" class="font-mono text-indigo-400">--초</span>
+                <div class="flex justify-between items-center text-[11px] text-[#8b909a] mt-2 tnum">
+                  <span>30초마다 새 번호</span>
+                  <span id="phone-timer-text" class="font-mono text-[#88d0dc]">--초</span>
                 </div>
               </div>
-
-              <!-- 학생을 위한 가이드 카드 -->
-              <div class="bg-indigo-950/40 border border-indigo-800/50 rounded-xl p-3 text-[11px] text-indigo-200">
-                <strong class="font-semibold block mb-0.5">📌 OTP(일회용 비밀번호) 특징:</strong>
-                컴퓨터와 스마트폰이 인터넷으로 연결되어 있지 않아도, 수학적 알고리즘(시간 기준)에 의해 동일한 번호가 생성되어 안전합니다.
+ 
+              <div class="rounded-[18px] border border-[#2a2e37] p-3.5 text-[12px] leading-relaxed text-[#b9bec7]">
+                <strong class="block font-semibold text-[#e7e8ea] mb-1">OTP의 비밀</strong>
+                PC와 스마트폰이 서로 연결되어 있지 않아도, 같은 시간 기준 계산으로 같은 번호가 만들어져요.
               </div>
             </div>
-
-            <!-- [모바일 화면 - 데모 2: 푸시 알림 승인 팝업] -->
-            <div id="phone-view-demo2" class="flex-1 flex flex-col justify-center relative py-4">
-
-              <!-- 대기 상태 (로그인 전) -->
-              <div id="phone-push-idle" class="text-center py-10 space-y-3">
-                <div
-                  class="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto text-slate-500">
-                  <i data-lucide="bell" class="w-6 h-6"></i>
+ 
+            <!-- 데모2: 푸시 -->
+            <div id="phone-view-demo2" class="hidden flex-1 flex flex-col justify-center relative pb-6">
+              <div id="phone-push-idle" class="text-center space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-[#1b1e25] border border-[#262a33] grid place-items-center mx-auto text-[#6d727c]">
+                  <i data-lucide="bell" class="w-5 h-5"></i>
                 </div>
-                <p class="text-xs text-slate-400 leading-relaxed">
-                  새로운 로그인 요청이 없습니다.<br>
-                  <span class="text-[10px] text-slate-500">PC에서 로그인을 누르면 푸시 알림이 도착합니다.</span>
-                </p>
+                <p class="text-[13px] text-[#b9bec7]">새 로그인 요청이 없어요</p>
+                <p class="text-[11.5px] text-[#6d727c]">PC에서 로그인하면 알림이 도착해요.</p>
               </div>
-
-              <!-- 푸시 도착 상태 (팝업 대화상자) -->
-              <div id="phone-push-card"
-                class="hidden bg-slate-800 border-2 border-indigo-500/80 rounded-2xl p-4 shadow-2xl space-y-3">
-                <div class="flex items-center gap-2 border-b border-slate-700/80 pb-2.5">
-                  <div class="p-1.5 bg-amber-500/20 text-amber-400 rounded-lg">
-                    <i data-lucide="shield-alert" class="w-4 h-4"></i>
-                  </div>
+ 
+              <div id="phone-push-card" class="hidden p-card rounded-[22px] p-4 space-y-3.5 ring-1 ring-[#88d0dc]/40">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-[10px] bg-[#e2b25a]/15 text-[#e2b25a] grid place-items-center"><i data-lucide="shield-alert" class="w-4 h-4"></i></div>
                   <div>
-                    <h4 class="text-xs font-bold text-white">로그인 승인 요청</h4>
-                    <p class="text-[10px] text-slate-400">본인이 시도한 것이 맞습니까?</p>
+                    <p class="text-[13px] font-semibold">로그인 승인 요청</p>
+                    <p class="text-[11px] text-[#8b909a]">본인이 시도한 로그인인가요?</p>
                   </div>
                 </div>
-
-                <div
-                  class="space-y-1.5 text-[11px] text-slate-300 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
-                  <div class="flex justify-between">
-                    <span class="text-slate-400">서비스:</span>
-                    <span class="font-semibold text-white">학교 포털 로그인</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-slate-400">접속기기:</span>
-                    <span class="font-mono text-slate-200">Chrome PC</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-slate-400">IP 위치:</span>
-                    <span id="phone-request-location" class="text-slate-200">대한민국 서울</span>
-                  </div>
-                </div>
-
-                <!-- 승인 / 거부 버튼 그룹 -->
-                <div class="grid grid-cols-2 gap-2 pt-1">
-                  <button onclick="handlePushAction(false)"
-                    class="py-2.5 px-3 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1">
-                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                    <span>거부 (아님)</span>
+ 
+                <dl class="text-[12px] rounded-[14px] bg-[#121419] px-3 py-1">
+                  <div class="flex justify-between py-1.5"><dt class="text-[#8b909a]">서비스</dt><dd class="font-medium">학교 포털</dd></div>
+                  <div class="flex justify-between py-1.5 border-t border-[#262a33]"><dt class="text-[#8b909a]">접속 기기</dt><dd class="font-mono text-[#d6d9de]">Chrome PC</dd></div>
+                  <div class="flex justify-between py-1.5 border-t border-[#262a33]"><dt class="text-[#8b909a]">IP 위치</dt><dd id="phone-request-location" class="ploc text-[#d6d9de]">대한민국 서울</dd></div>
+                </dl>
+ 
+                <div class="grid grid-cols-2 gap-2">
+                  <button onclick="handlePushAction(false)" class="btn py-2.5 text-[13px] bg-[#2a2e37] text-[#f0a595] hover:bg-[#343944]">
+                    <i data-lucide="x" class="w-4 h-4"></i><span>거부</span>
                   </button>
-                  <button onclick="handlePushAction(true)"
-                    class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg transition flex items-center justify-center gap-1">
-                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                    <span>승인 (본인)</span>
+                  <button onclick="handlePushAction(true)" class="btn py-2.5 text-[13px] bg-[#88d0dc] text-[#0b3a44] hover:bg-[#a0dce6]">
+                    <i data-lucide="check" class="w-4 h-4"></i><span>승인</span>
                   </button>
                 </div>
               </div>
-
             </div>
-
           </div>
-
-          <!-- 스마트폰 하단 홈 바 -->
-          <div class="pb-2 flex justify-center">
-            <div class="w-32 h-1 bg-slate-600 rounded-full"></div>
-          </div>
-
+ 
+          <div class="pb-2.5 flex justify-center"><div class="w-[120px] h-1 bg-[#4a4f59] rounded-full"></div></div>
         </div>
       </div>
-
-      <!-- 모바일 기기 설명 -->
-      <span class="text-[11px] text-slate-400 mt-2">
-        ※ 학생 본인의 물리적 스마트폰을 가상으로 재현한 화면입니다.
-      </span>
+ 
+      <p class="text-xs text-[#737780] mt-4 max-w-[320px] text-center">학생이 가진 스마트폰을 가상으로 재현한 화면이에요.</p>
     </section>
-
   </main>
-
-  <!-- 하단 교육 설명 섹션 -->
-  <footer class="bg-white border-t border-slate-200 py-6 mt-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6">
-      <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-        <i data-lucide="book-open" class="w-4 h-4 text-indigo-600"></i>
-        <span>선생님과 학생을 위한 2단계 인증 핵심 개념 정리</span>
-      </h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-600">
-        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
-          <div class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
-            <span
-              class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px]">1</span>
-            지식 기반 + 소유 기반 인증
-          </div>
-          <p class="leading-relaxed">
-            내가 알고 있는 것(비밀번호)만으로는 부족합니다. 내가 직접 가지고 있는 것(스마트폰 기기)까지 함께 증명해야 로그인할 수 있는 보안 기술입니다.
-          </p>
-        </div>
-
-        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
-          <div class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
-            <span
-              class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px]">2</span>
-            비밀번호가 털려도 안전할까?
-          </div>
-          <p class="leading-relaxed">
-            해커가 피싱이나 키로거로 비밀번호를 알아내더라도, 내 손안의 스마트폰에 뜨는 OTP 코드나 승인 권한이 없으므로 로그인을 시도할 수 없습니다.
-          </p>
-        </div>
-
-        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
-          <div class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
-            <span
-              class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px]">3</span>
-            OTP vs 모바일 푸시 방식의 차이
-          </div>
-          <p class="leading-relaxed">
-            OTP는 6자리를 직접 보고 옮겨 적는 방식(Google OTP)이고, 푸시 방식은 앱에서 확인 버튼 하나만 누르면 서버를 통해 자동 완료되는 편리한 방식입니다.
-          </p>
-        </div>
+ 
+  <!-- 개념 정리 -->
+  <footer class="border-t border-[#dad7cf]">
+    <div class="max-w-[1240px] mx-auto px-5 sm:px-8 py-14 grid lg:grid-cols-[320px_minmax(0,1fr)] gap-8 lg:gap-16">
+      <div>
+        <p class="font-mono text-xs text-[#0d6a7e] mb-2">핵심 개념</p>
+        <h2 class="text-2xl font-bold leading-snug">2단계 인증,<br>이것만 기억해요</h2>
       </div>
+      <ol class="divide-y divide-[#dad7cf]">
+        <li class="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3 pb-5">
+          <span class="font-mono text-sm text-[#737780] pt-0.5">01</span>
+          <div><p class="font-semibold">아는 것 + 가진 것</p>
+            <p class="text-sm text-[#474b54] mt-1 leading-relaxed max-w-[62ch]">내가 알고 있는 것(비밀번호)에 내가 가지고 있는 것(스마트폰)까지 함께 증명해야 로그인할 수 있어요.</p></div>
+        </li>
+        <li class="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3 py-5">
+          <span class="font-mono text-sm text-[#737780] pt-0.5">02</span>
+          <div><p class="font-semibold">비밀번호가 새어 나가도</p>
+            <p class="text-sm text-[#474b54] mt-1 leading-relaxed max-w-[62ch]">해커가 피싱이나 키로거로 비밀번호를 알아내도, 내 스마트폰의 코드나 승인이 없으면 로그인할 수 없어요.</p></div>
+        </li>
+        <li class="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3 py-5">
+          <span class="font-mono text-sm text-[#737780] pt-0.5">03</span>
+          <div><p class="font-semibold">OTP와 푸시의 차이</p>
+            <p class="text-sm text-[#474b54] mt-1 leading-relaxed max-w-[62ch]">OTP는 6자리 번호를 보고 직접 옮겨 적는 방식이고, 푸시는 앱에서 승인 버튼 하나로 끝나는 방식이에요. 편한 만큼 모르는 요청은 꼭 거부해야 해요.</p></div>
+        </li>
+      </ol>
+    </div>
+    <div class="max-w-[1240px] mx-auto px-5 sm:px-8 pb-8 text-xs text-[#737780] flex flex-wrap gap-x-4 gap-y-1">
+      <span>이 페이지는 입력한 내용을 저장하거나 인터넷으로 보내지 않아요.</span>
+      <span>화면의 계정·코드·기기·위치 정보는 모두 가상 정보예요.</span>
     </div>
   </footer>
-
-  <!-- 알림 토스트 모달 (alert 대용) -->
-  <div id="toast-message"
-    class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl text-xs flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
-    <i id="toast-icon" data-lucide="info" class="w-4 h-4 text-indigo-400"></i>
+ 
+  <!-- 토스트 -->
+  <div id="toast-message" role="status" aria-live="polite"
+    class="fixed bottom-6 left-1/2 -translate-x-1/2 w-max max-w-[92vw] bg-[#16181d] text-white pl-3.5 pr-4 py-3 rounded-2xl shadow-2xl text-[13px] flex items-center gap-2.5 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <i id="toast-icon" data-lucide="info" class="w-4 h-4 text-[#88d0dc] shrink-0"></i>
     <span id="toast-text">알림 내용</span>
   </div>
-
+</div>
   <script>
     // ==========================================
     // 앱 전역 상태 관리
@@ -616,7 +534,7 @@
       hackerModeActive: false,
       smsTimer: null
     };
-
+ 
     // 실시간 시계 업데이트 (스마트폰 상단)
     function updatePhoneClock() {
       const now = new Date();
@@ -627,39 +545,39 @@
     }
     setInterval(updatePhoneClock, 1000);
     updatePhoneClock();
-
+ 
     // ==========================================
     // 모드 전환 (데모 1 vs 데모 2)
     // ==========================================
     function switchMode(newMode) {
       state.mode = newMode;
       resetAllState();
-
+ 
       const tab1 = document.getElementById('tab-demo1');
       const tab2 = document.getElementById('tab-demo2');
       const guideTitle = document.getElementById('guide-title');
       const guideDesc = document.getElementById('guide-desc');
       const phoneDemo1 = document.getElementById('phone-view-demo1');
       const phoneDemo2 = document.getElementById('phone-view-demo2');
-
+ 
       if (newMode === 'code') {
-        tab1.className = "px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 bg-white text-indigo-600 shadow-sm";
-        tab2.className = "px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 text-slate-600 hover:text-slate-900";
+        tab1.className = "seg-btn is-active";
+        tab2.className = "seg-btn";
         guideTitle.textContent = "데모 1: 일회용 인증코드(OTP) 방식";
-        guideDesc.textContent = "왼쪽 PC에서 로그인 버튼을 누르면 스마트폰에 6자리 번호가 생성됩니다. 그 번호를 PC에 입력하여 승인해 보세요!";
+        guideDesc.textContent = "왼쪽 PC에서 로그인 버튼을 누르면 스마트폰에 6자리 번호가 생성됩니다. 그 번호를 PC에 입력하여 승인해 보세요.";
         phoneDemo1.classList.remove('hidden');
         phoneDemo2.classList.add('hidden');
       } else {
-        tab2.className = "px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 bg-white text-indigo-600 shadow-sm";
-        tab1.className = "px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 text-slate-600 hover:text-slate-900";
+        tab2.className = "seg-btn is-active";
+        tab1.className = "seg-btn";
         guideTitle.textContent = "데모 2: 모바일 푸시 원터치 승인 방식";
-        guideDesc.textContent = "PC에서 로그인하면 스마트폰으로 승인 요청 팝업이 전송됩니다. 스마트폰에서 [승인] 또는 [거부]를 눌러보세요!";
+        guideDesc.textContent = "PC에서 로그인하면 스마트폰으로 승인 요청 팝업이 전송됩니다. 스마트폰에서 [승인] 또는 [거부]를 눌러 보세요.";
         phoneDemo1.classList.add('hidden');
         phoneDemo2.classList.remove('hidden');
       }
-      lucide.createIcons();
+      renderIcons();
     }
-
+ 
     // ==========================================
     // OTP 코드 생성 및 타이머 루프 (데모 1)
     // ==========================================
@@ -672,11 +590,11 @@
       state.timerRemaining = 30;
       updateTimerDisplay();
     }
-
+ 
     function startOtpTimer() {
       if (state.timerInterval) clearInterval(state.timerInterval);
       generateNewOtp();
-
+ 
       state.timerInterval = setInterval(() => {
         state.timerRemaining--;
         if (state.timerRemaining <= 0) {
@@ -685,7 +603,7 @@
         updateTimerDisplay();
       }, 1000);
     }
-
+ 
     function stopOtpTimer() {
       if (state.timerInterval) {
         clearInterval(state.timerInterval);
@@ -698,7 +616,7 @@
       if (timerBar) timerBar.style.width = '0%';
       if (timerText) timerText.textContent = '--초';
     }
-
+ 
     function updateTimerDisplay() {
       const timerBar = document.getElementById('phone-timer-bar');
       const timerText = document.getElementById('phone-timer-text');
@@ -708,7 +626,7 @@
         timerText.textContent = `${state.timerRemaining}초`;
       }
     }
-
+ 
     // ==========================================
     // PC 화면 단계 제어
     // ==========================================
@@ -718,9 +636,10 @@
       document.getElementById('pc-step-push-wait').classList.add('hidden');
       document.getElementById('pc-step-success').classList.add('hidden');
       document.getElementById('pc-step-denied').classList.add('hidden');
-
+ 
       const statusText = document.getElementById('pc-status-text');
-
+      updateStepper(viewName);
+ 
       if (viewName === 'login') {
         document.getElementById('pc-step-login').classList.remove('hidden');
         statusText.textContent = '1단계 비밀번호 입력 대기';
@@ -744,15 +663,15 @@
         document.getElementById('pc-step-denied').classList.remove('hidden');
         statusText.textContent = '🚫 접근 거부 및 세션 종료';
       }
-      lucide.createIcons();
+      renderIcons();
     }
-
+ 
     // [동작 1] PC에서 로그인 버튼 클릭 시
     function handlePcLoginSubmit() {
       // 정상 로그인 시 위치를 기본값으로 보장
       updateRequestLocation('대한민국 서울', false);
       showToast('1단계 비밀번호 검증 성공! 2단계 인증으로 이동합니다.', 'check');
-
+ 
       if (state.mode === 'code') {
         // 데모 1: 스마트폰에서 OTP 타이머 시작 & PC에서 OTP 입력 화면 표시
         startOtpTimer();
@@ -769,12 +688,12 @@
         showToast('스마트폰에 로그인 승인 요청 푸시가 도착했습니다!', 'bell');
       }
     }
-
+ 
     // [데모 1 로직] 사용자가 입력한 OTP 검증
     function verifyOtpCode() {
       const input = document.getElementById('pc-otp-input').value.trim();
       const errorMsg = document.getElementById('pc-otp-error');
-
+ 
       if (input === state.currentOtp) {
         errorMsg.classList.add('hidden');
         stopOtpTimer();
@@ -788,23 +707,23 @@
         showToast('코드가 일치하지 않습니다. 오른쪽 스마트폰을 확인하세요.', 'alert-triangle');
       }
     }
-
+ 
     // 데모 1 편의기능: 오른쪽 폰의 번호를 자동으로 좌측에 입력
     function autoFillCode() {
       document.getElementById('pc-otp-input').value = state.currentOtp;
       document.getElementById('pc-otp-error').classList.add('hidden');
       showToast('스마트폰의 OTP 코드를 자동으로 입력했습니다.', 'copy');
     }
-
+ 
     // [데모 2 로직] 스마트폰에서 승인 / 거부 터치
     function handlePushAction(isApproved) {
       document.getElementById('phone-push-card').classList.add('hidden');
       document.getElementById('phone-push-idle').classList.remove('hidden');
-
+ 
       if (isApproved) {
         showPcView('success');
         showToast('스마트폰에서 승인되었습니다! PC 로그인이 완료됩니다.', 'check');
-
+ 
         // 이스터에그: 해킹 방어체험 중인데도 승인을 누른 경우 -> 3초 뒤 결제 문자 알림 표시
         if (state.hackerModeActive) {
           if (state.smsTimer) clearTimeout(state.smsTimer);
@@ -822,7 +741,7 @@
         }
       }
     }
-
+ 
     // 이스터에그: 3초 뒤 상단 문자 알림 띄우기
     function triggerSmsEasterEgg() {
       const now = new Date();
@@ -832,33 +751,33 @@
       const hours = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
       const dateTimeStr = `${year}.${month}.${date} ${hours}:${minutes}`;
-
+ 
       const smsBanner = document.getElementById('phone-sms-banner');
       const smsContent = document.getElementById('sms-text-content');
-
+ 
       if (smsBanner && smsContent) {
         // [Web발신] (현재 날짜, 시간)) 구글Play스토어 2,580,000원 결제
-        smsContent.innerHTML = `<span class="text-rose-400 font-bold">[Web발신]</span> (${dateTimeStr}) 구글Play스토어 <span class="text-amber-300 font-bold underline">2,580,000원</span> 결제`;
-
+        smsContent.innerHTML = `<span class="text-[#f08a78] font-bold">[Web발신]</span> (${dateTimeStr}) 구글Play스토어 <span class="text-[#e2b25a] font-bold">2,580,000원</span> 결제`;
+ 
         smsBanner.classList.remove('hidden');
         // 부드럽게 상단에서 슬라이드 다운
         setTimeout(() => {
           smsBanner.classList.remove('-translate-y-12', 'opacity-0');
           smsBanner.classList.add('translate-y-0', 'opacity-100');
         }, 30);
-
+ 
         // 스마트폰 햅틱/진동 애니메이션 효과
         const phoneEl = document.querySelector('.phone-mockup');
         if (phoneEl) {
           phoneEl.classList.add('shake-animate');
           setTimeout(() => phoneEl.classList.remove('shake-animate'), 500);
         }
-
+ 
         showToast('🚨 [경고] 알 수 없는 해외 접속을 승인하여 구글Play스토어 2,580,000원이 결제되었습니다!', 'alert-triangle');
-        lucide.createIcons();
+        renderIcons();
       }
     }
-
+ 
     // 상단 문자 알림 닫기
     function dismissSmsBanner() {
       const smsBanner = document.getElementById('phone-sms-banner');
@@ -868,39 +787,39 @@
         setTimeout(() => smsBanner.classList.add('hidden'), 350);
       }
     }
-
+ 
     // 인증 취소
     function cancelVerification() {
       resetAllState();
       showToast('로그인 요청이 취소되었습니다.', 'x');
     }
-
+ 
     // ==========================================
     // 요청 위치 동적 변경 헬퍼 함수
     // ==========================================
     function updateRequestLocation(locationName, isAlert = false) {
       const pcLoc = document.getElementById('pc-request-location');
       const phoneLoc = document.getElementById('phone-request-location');
-
+ 
       if (pcLoc) {
         pcLoc.textContent = locationName;
         if (isAlert) {
-          pcLoc.className = 'font-bold text-rose-600';
+          pcLoc.className = 'loc is-alert';
         } else {
-          pcLoc.className = 'font-medium text-slate-800';
+          pcLoc.className = 'loc';
         }
       }
-
+ 
       if (phoneLoc) {
         phoneLoc.textContent = locationName;
         if (isAlert) {
-          phoneLoc.className = 'font-bold text-rose-400';
+          phoneLoc.className = 'ploc is-alert';
         } else {
-          phoneLoc.className = 'text-slate-200';
+          phoneLoc.className = 'ploc text-[#d6d9de]';
         }
       }
     }
-
+ 
     // ==========================================
     // 해커 공격 시뮬레이션 시나리오
     // ==========================================
@@ -910,19 +829,19 @@
         switchMode('push');
       }
       resetAllState();
-
+ 
       // 해킹 방어 체험 활성화
       state.hackerModeActive = true;
-
+ 
       // 해킹 방어 체험 시 요청 위치를 "China, Singapore"로 변경
       updateRequestLocation('China, Singapore', true);
-
+ 
       showToast('⚠️ 경고: 해커가 내 비밀번호를 알아내어 로그인을 시도했습니다!', 'alert-triangle');
-
+ 
       // PC 화면은 해커의 PC처럼 보이게 대기화면으로
       showPcView('push');
       document.getElementById('pc-status-text').textContent = '⚠️ 알 수 없는 기기에서 로그인 시도 중';
-
+ 
       // 폰에 푸시 알림 등장
       setTimeout(() => {
         document.getElementById('phone-push-idle').classList.add('hidden');
@@ -931,14 +850,14 @@
         pushCard.classList.add('shake-animate');
       }, 300);
     }
-
+ 
     // ==========================================
     // 전체 상태 초기화
     // ==========================================
     function resetAllState() {
       stopOtpTimer();
       showPcView('login');
-
+ 
       // 이스터에그 및 해킹 상태 초기화
       state.hackerModeActive = false;
       if (state.smsTimer) {
@@ -946,48 +865,73 @@
         state.smsTimer = null;
       }
       dismissSmsBanner();
-
+ 
       // 위치 정보 초기화 (기본값: 대한민국 서울)
       updateRequestLocation('대한민국 서울', false);
-
+ 
       // 폰 상태 초기화
       document.getElementById('phone-push-card').classList.add('hidden');
       document.getElementById('phone-push-idle').classList.remove('hidden');
       document.getElementById('phone-otp-helper').textContent = 'PC에서 로그인을 시작하면 코드가 생성됩니다.';
       document.getElementById('pc-otp-error').classList.add('hidden');
       document.getElementById('pc-otp-input').value = '';
+      document.getElementById('pc-otp-input').classList.remove('border-rose-500');
     }
-
+ 
+    // 진행 단계 표시 업데이트
+    function updateStepper(viewName) {
+      const stage = { login: 1, otp: 2, push: 2, success: 3, denied: 3 }[viewName] || 1;
+      document.querySelectorAll('#stepper li[data-step]').forEach((li) => {
+        const n = Number(li.dataset.step);
+        li.classList.remove('is-now', 'is-done', 'is-ok', 'is-bad');
+        if (n < stage) li.classList.add('is-done');
+        else if (n === stage) {
+          if (viewName === 'success') li.classList.add('is-ok');
+          else if (viewName === 'denied') li.classList.add('is-bad');
+          else li.classList.add('is-now');
+        }
+      });
+    }
+ 
     // 커스텀 토스트 메시지
     function showToast(message, iconName = 'info') {
       const toast = document.getElementById('toast-message');
       const text = document.getElementById('toast-text');
       const icon = document.getElementById('toast-icon');
-
+ 
       text.textContent = message;
       icon.setAttribute('data-lucide', iconName);
-      lucide.createIcons();
-
+      renderIcons();
+ 
       toast.classList.remove('translate-y-20', 'opacity-0');
       toast.classList.add('translate-y-0', 'opacity-100');
-
+ 
       if (window.toastTimeout) clearTimeout(window.toastTimeout);
       window.toastTimeout = setTimeout(() => {
         toast.classList.remove('translate-y-0', 'opacity-100');
         toast.classList.add('translate-y-20', 'opacity-0');
       }, 3200);
     }
-
+ 
     // 엔터키 지원 (OTP 입력창)
     document.getElementById('pc-otp-input').addEventListener('keyup', (e) => {
       if (e.key === 'Enter') verifyOtpCode();
     });
-
+    document.getElementById('pc-otp-input').addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/[^0-9]/g, '');
+      e.target.classList.remove('border-rose-500');
+    });
+ 
     // 초기화 아이콘 로드
     window.onload = () => {
-      lucide.createIcons();
+      renderIcons();
     };
   </script>
 </body>
-
+ 
 </html>
+ 
+
+
+
+
