@@ -149,6 +149,48 @@
   .pct { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
   .result-hint { margin: 12px 0 0; font-size: .8125rem; color: var(--muted); }
 
+  /* ----- 도움말 ----- */
+  main { padding-bottom: 104px; }
+  .help-btn { position: fixed; right: 20px; bottom: 20px; z-index: 10; width: 52px; height: 52px; padding: 0;
+    font-size: 1.5rem; font-weight: 700; background: var(--accent); box-shadow: var(--shadow); }
+  .help { width: calc(100% - 32px); max-width: 640px; max-height: 86dvh; padding: 0; color: var(--ink);
+    border: var(--line); box-shadow: var(--shadow-lg); background: var(--surface); overflow: hidden; }
+  .help[open] { display: flex; flex-direction: column; animation: help-in .22s var(--ease-out) both; }
+  .help::backdrop { background: rgba(28, 29, 33, .45); }
+  @keyframes help-in { from { opacity: 0; transform: translateY(12px) scale(.97); } }
+  .help-head { display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: 14px 20px; border-bottom: var(--line); background: var(--accent); }
+  .help-head h2 { margin: 0; font-size: 1.2rem; }
+  .help-body { overflow-y: auto; padding: 8px 24px 28px; overscroll-behavior: contain; }
+  .help h3 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em; margin: 24px 0 12px; }
+  .help p { margin: 0 0 10px; max-width: 62ch; }
+  .muted { color: var(--muted); }
+  .how { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  .how li { display: grid; grid-template-columns: 32px 1fr; gap: 12px; align-items: start; }
+  .how .num { width: 32px; height: 32px; display: grid; place-items: center; border: var(--line);
+    background: var(--surface); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .how b { font-weight: 600; }
+  .how p { margin: 2px 0 0; color: var(--muted); font-size: .9375rem; }
+  .ai-step { border: var(--line); padding: 14px 16px; margin-bottom: 14px; background: var(--field); }
+  .ai-step h4 { margin: 0 0 8px; font-size: 1rem; font-weight: 600; }
+  .ai-step h4 span { display: inline-block; min-width: 24px; text-align: center; margin-right: 6px;
+    background: var(--ink); color: var(--surface); font-weight: 500; }
+  .ai-step p { font-size: .9375rem; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0; }
+  .tk { font-size: .8125rem; padding: 1px 8px; border: 1.5px solid var(--ink); background: var(--cc, var(--surface)); }
+  .arrow { color: var(--muted); }
+  .count-table { border-collapse: collapse; margin: 8px 0 10px; font-size: .9375rem; font-variant-numeric: tabular-nums; }
+  .count-table th, .count-table td { border: 1.5px solid var(--ink); padding: 4px 12px; text-align: center; }
+  .count-table th { font-weight: 600; background: var(--cc, var(--surface)); }
+  .count-table td:first-child { text-align: left; }
+  .formula { font-size: .9375rem; background: var(--surface); border: 1.5px dashed var(--ink); padding: 8px 12px; margin: 8px 0 10px; }
+  .note { border-left: 4px solid var(--ink); padding: 4px 0 4px 12px; margin-top: 18px; }
+  .evidence { border: var(--line); background: var(--surface); padding: 14px 16px; }
+  .ev-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center;
+    padding: 6px 0; border-bottom: 1.5px dashed rgba(28, 29, 33, .25); font-size: .9375rem; }
+  .ev-row:last-child { border-bottom: none; }
+  .ev-counts { color: var(--muted); font-variant-numeric: tabular-nums; }
+
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   @media (max-width: 520px) {
@@ -158,6 +200,8 @@
     .stepper .label { font-size: .75rem; }
     .screen { padding: 20px 18px 24px; box-shadow: var(--shadow); }
     .test-row { flex-direction: column; }
+    .help-btn { right: 14px; bottom: 14px; width: 46px; height: 46px; }
+    .help-body { padding: 4px 16px 24px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -235,6 +279,80 @@
     </div>
   </section>
 </main>
+
+<button class="help-btn" id="helpBtn" aria-label="도움말: 사용 방법과 인공지능 작동 원리" aria-haspopup="dialog">?</button>
+
+<dialog class="help" id="help" aria-labelledby="helpTitle">
+  <div class="help-head">
+    <h2 id="helpTitle">이 인공지능은 어떻게 작동할까?</h2>
+    <button id="helpClose">닫기</button>
+  </div>
+  <div class="help-body">
+    <h3>사용 방법</h3>
+    <ol class="how">
+      <li><span class="num">1</span><div><b>모델 이름 정하기</b>
+        <p>무엇을 분류할 모델인지 이름을 지어요. 예: 감정 분류기, 스팸 찾기</p></div></li>
+      <li><span class="num">2</span><div><b>학습 데이터 입력하기</b>
+        <p>클래스(정답의 이름)를 만들고, 각 클래스에 맞는 예시 문장을 쉼표로 구분해 5개 이상 넣어요.
+          예시가 많고 다양할수록 더 잘 맞혀요.</p></div></li>
+      <li><span class="num">3</span><div><b>학습하기</b>
+        <p>컴퓨터가 예시 문장을 조각으로 나누고, 어떤 조각이 어느 클래스에 몇 번 나왔는지 세어 기억해요.</p></div></li>
+      <li><span class="num">4</span><div><b>테스트하기</b>
+        <p>처음 보는 문장을 넣으면, 세어 둔 개수를 바탕으로 클래스별 확률을 계산해 가장 높은 것을 골라요.</p></div></li>
+    </ol>
+
+    <h3>인공지능이 판단하는 과정</h3>
+    <p class="muted">이 모델은 <b>나이브 베이즈 분류기</b>예요. 뜻을 이해하는 게 아니라, 학습 데이터에 나온 조각의 개수를 세고 확률로 비교해요.</p>
+
+    <div class="ai-step">
+      <h4><span>1</span>문장을 조각으로 자르기</h4>
+      <div class="flow">
+        <span class="tk">시험을 망쳐서</span><span class="arrow" aria-hidden="true">→</span>
+        <span class="tk">시험을</span><span class="tk">망쳐서</span>
+        <span class="tk">시험</span><span class="tk">험을</span><span class="tk">망쳐</span><span class="tk">쳐서</span>
+        <span class="tk">시</span><span class="tk">험</span><span class="tk">…</span>
+      </div>
+      <p>단어 전체, 두 글자 묶음, 한 글자로 잘라요. 한국어는 "우울하다"와 "우울해"처럼 끝이 바뀌어도
+        "우울"이라는 조각이 같아서, 비슷한 말로 알아볼 수 있어요.</p>
+    </div>
+
+    <div class="ai-step">
+      <h4><span>2</span>클래스별로 조각 개수 세기 (학습)</h4>
+      <table class="count-table">
+        <thead><tr><th>조각</th><th style="--cc: var(--c0)">긍정</th><th style="--cc: var(--c1)">부정</th></tr></thead>
+        <tbody>
+          <tr><td>좋</td><td>2번</td><td>0번</td></tr>
+          <tr><td>우울</td><td>0번</td><td>1번</td></tr>
+          <tr><td>시험</td><td>1번</td><td>1번</td></tr>
+        </tbody>
+      </table>
+      <p>기본 예시 데이터로 센 결과예요. 학습이 끝나면 모델은 이런 개수표만 가지고 있어요.</p>
+    </div>
+
+    <div class="ai-step">
+      <h4><span>3</span>새 문장의 점수 매기기 (테스트)</h4>
+      <p>"시험 망쳐서 우울해"가 들어오면 클래스마다 이렇게 물어요.
+        "이 클래스의 문장이라면, 이런 조각들이 나올 가능성은 얼마나 될까?"</p>
+      <div class="formula">점수(부정) = 부정 문장의 비율 × "망쳐"가 부정에서 나온 비율 × "우울"이 부정에서 나온 비율 × …</div>
+      <p>"망쳐"와 "우울"은 부정에서만 나왔으니 부정의 점수가 훨씬 커져요.
+        한 번도 안 나온 조각은 점수가 0이 되지 않게 모든 개수에 1을 더해서 계산해요.</p>
+    </div>
+
+    <div class="ai-step">
+      <h4><span>4</span>확률로 바꿔 비교하기</h4>
+      <p>클래스별 점수를 합이 100%가 되도록 바꿔요. 가장 높은 클래스가 결과가 되고, 화면의 막대그래프가 이 확률이에요.</p>
+    </div>
+
+    <h3 id="evidenceTitle">방금 분류한 문장의 근거</h3>
+    <div class="evidence" id="evidence"></div>
+
+    <div class="note">
+      <p><b>왜 "나이브(순진한)"일까?</b> 조각들이 서로 관계없다고 단순하게 가정하고 그냥 곱하기 때문이에요.</p>
+      <p class="muted">그래서 한계도 있어요. 배운 적 없는 단어는 판단에 쓰지 못하고,
+        "안 좋아"처럼 "좋"이 들어간 부정 문장에 속을 수도 있어요. 직접 테스트해서 찾아보세요.</p>
+    </div>
+  </div>
+</dialog>
 
 <script>
 // ----- 화면 전환 -----
@@ -490,6 +608,7 @@ function runTest() {
   if (!model) return;
   if (!text) { testInput.focus(); return; }
   const preds = predict(model, text);
+  lastTest = text;
   resultEl.innerHTML =
     `<p class="result-top">결과 <b style="--cc: var(--c${preds[0].color})">${escapeHtml(preds[0].label)}</b></p>` +
     preds.map(p => `
@@ -498,7 +617,9 @@ function runTest() {
         <div class="bar"><span></span></div>
         <div class="pct">${(p.prob * 100).toFixed(1)}%</div>
       </div>`).join('') +
-    `<p class="result-hint">“${escapeHtml(text)}”에 대한 클래스별 확률이에요.</p>`;
+    `<p class="result-hint">“${escapeHtml(text)}”에 대한 클래스별 확률이에요.
+      <button class="btn-text" data-why>왜 이렇게 판단했을까?</button></p>`;
+  resultEl.querySelector('[data-why]').addEventListener('click', () => openHelp(true));
   requestAnimationFrame(() => requestAnimationFrame(() => {
     resultEl.querySelectorAll('.bar > span').forEach((el, i) => el.style.transform = `scaleX(${preds[i].prob})`);
   }));
@@ -512,6 +633,58 @@ document.getElementById('testBtn').addEventListener('click', runTest);
 testInput.addEventListener('keydown', e => { if (e.key === 'Enter') runTest(); });
 document.getElementById('backToData').addEventListener('click', () => go(2));
 document.getElementById('restart').addEventListener('click', () => go(1));
+
+// ----- 도움말 -----
+const help = document.getElementById('help');
+const evidenceEl = document.getElementById('evidence');
+let lastTest = '';
+
+// 마지막 테스트 문장의 조각 중, 클래스 사이 확률 차이가 큰 조각을 보여 준다
+function renderEvidence() {
+  if (!model || !lastTest) {
+    evidenceEl.innerHTML = '<p class="muted" style="margin:0">4단계에서 문장을 분류하면, 어떤 조각이 판단에 영향을 줬는지 여기에 나와요.</p>';
+    return;
+  }
+  const rows = [...new Set(tokenize(lastTest))]
+    .filter(tok => !tok.startsWith('c:')) // 한 글자 조각은 너무 많아서 단어·두 글자 조각만 보여 준다
+    .map(tok => {
+      const counts = model.classes.map(c => c.counts.get(tok) || 0);
+      const ps = model.classes.map((c, i) => (counts[i] + 1) / (c.total + model.vocabSize));
+      const sorted = [...ps].sort((a, b) => b - a);
+      return { tok: tok.slice(2), counts, best: ps.indexOf(sorted[0]), strength: Math.log(sorted[0] / sorted[1]) };
+    })
+    .filter(r => r.counts.some(n => n > 0) && r.strength > 0.01)
+    .sort((a, b) => b.strength - a.strength)
+    .slice(0, 6);
+
+  const head = `<p style="margin:0 0 8px"><b>“${escapeHtml(lastTest)}”</b>에서 판단에 영향을 준 조각이에요.</p>`;
+  if (!rows.length) {
+    evidenceEl.innerHTML = head + '<p class="muted" style="margin:0">이 문장의 조각은 학습 데이터에 거의 나오지 않았어요. ' +
+      '그래서 클래스별 문장 수 비율로만 판단했어요. 비슷한 예시 문장을 더 넣어 보세요.</p>';
+    return;
+  }
+  evidenceEl.innerHTML = head + rows.map(r => `
+    <div class="ev-row">
+      <span><span class="tk" style="--cc: var(--c${r.best % COLORS})">${escapeHtml(r.tok)}</span>
+        <span class="arrow">→ ${escapeHtml(model.classes[r.best].label)} 쪽</span></span>
+      <span class="ev-counts">${model.classes.map((c, i) => `${escapeHtml(c.label)} ${r.counts[i]}번`).join(' / ')}</span>
+    </div>`).join('') +
+    '<p class="muted" style="margin:8px 0 0;font-size:.875rem">조각 색은 그 조각이 더 자주 나온 클래스의 색이에요.</p>';
+}
+
+function openHelp(toEvidence = false) {
+  renderEvidence();
+  help.showModal();
+  const body = help.querySelector('.help-body');
+  body.scrollTop = toEvidence ? document.getElementById('evidenceTitle').offsetTop - body.offsetTop - 8 : 0;
+}
+
+document.getElementById('helpBtn').addEventListener('click', () => openHelp());
+document.getElementById('helpClose').addEventListener('click', () => help.close());
+// 바깥(어두운 배경)을 눌렀다 뗐을 때만 닫기: 글자를 드래그하다 바깥에서 놓아도 닫히지 않게
+let pressedBackdrop = false;
+help.addEventListener('pointerdown', e => { pressedBackdrop = e.target === help; });
+help.addEventListener('click', e => { if (pressedBackdrop && e.target === help) help.close(); });
 
 go(1);
 </script>
