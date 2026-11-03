@@ -5,7 +5,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&family=Nanum+Gothic+Coding:wght@400;700&display=swap">
 <style>
-/* 레이아웃: 960×540 전술 HUD 무대. 각진 패널 + 얇은 선 + 모서리 컷, 사람(금색)·AI(청록) 두 진영 색으로 구분 */
+/* 레이아웃: 가로 960 고정, 세로 540~720(화면 비율 16:9~4:3에 맞춰 늘어남) 전술 HUD 무대. 각진 패널 + 얇은 선 + 모서리 컷, 사람(금색)·AI(청록) 두 진영 색으로 구분 */
 :root{
   --bg:#0F1923; --bg2:#16222D; --panel:rgba(15,25,35,.90); --panel2:#1C2935; --panel3:#24323F;
   --line:rgba(236,232,225,.16); --line2:rgba(236,232,225,.32);
@@ -26,7 +26,7 @@
 html,body{height:100%}
 body{margin:0;background:#070C12;color:var(--fg);font-family:var(--body);overflow:hidden;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
 #root{position:fixed;inset:0;display:grid;place-items:center;background:repeating-linear-gradient(135deg,rgba(236,232,225,.025) 0 2px,transparent 2px 14px),#070C12}
-#stage{width:960px;height:540px;position:relative;overflow:hidden;background:var(--bg);transform-origin:center center;user-select:none;-webkit-user-select:none;font-size:15px;line-height:1.5;box-shadow:0 0 0 1px var(--line),0 30px 80px rgba(0,0,0,.6)}
+#stage{width:960px;height:540px;position:absolute;left:50%;top:50%;overflow:hidden;background:var(--bg);transform-origin:center center;user-select:none;-webkit-user-select:none;font-size:15px;line-height:1.5;box-shadow:0 0 0 1px var(--line),0 30px 80px rgba(0,0,0,.6)}
 #stage *{box-sizing:border-box}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;border-radius:0;-webkit-tap-highlight-color:transparent}
 button:disabled{cursor:default}
@@ -110,8 +110,8 @@ button:focus-visible,textarea:focus-visible{outline:2px solid var(--fg);outline-
 .sel .portrait::before{content:"";position:absolute;left:40px;right:40px;top:40px;bottom:96px;background:linear-gradient(160deg,var(--panel3),transparent);clip-path:polygon(18% 0,100% 0,82% 100%,0 100%);opacity:.9}
 .sel .portrait.h::before{background:linear-gradient(160deg,rgba(245,184,65,.35),transparent 70%)}
 .sel .portrait.a::before{background:linear-gradient(160deg,rgba(47,224,192,.32),transparent 70%)}
-.sel .portrait img{position:relative;height:430px;width:auto;margin-bottom:100px;clip-path:polygon(9% 0,100% 0,91% 100%,0 100%);animation:fade .35s var(--ease)}
-.sel .portrait .edge{position:absolute;bottom:100px;left:50%;width:330px;height:430px;transform:translateX(-50%);pointer-events:none;clip-path:polygon(9% 0,100% 0,91% 100%,0 100%);box-shadow:inset 0 -120px 80px -40px rgba(15,25,35,.85)}
+.sel .portrait img{position:relative;height:min(calc(var(--sh,540px) - 110px),540px);width:auto;margin-bottom:100px;clip-path:polygon(9% 0,100% 0,91% 100%,0 100%);animation:fade .35s var(--ease)}
+.sel .portrait .edge{position:absolute;bottom:100px;left:50%;height:min(calc(var(--sh,540px) - 110px),540px);aspect-ratio:3/4;transform:translateX(-50%);pointer-events:none;clip-path:polygon(9% 0,100% 0,91% 100%,0 100%);box-shadow:inset 0 -120px 80px -40px rgba(15,25,35,.85)}
 .sel .portrait .edge::after{content:"";position:absolute;left:9%;right:0;top:0;height:4px;background:var(--pc)}
 .sel .portrait.h{--pc:var(--human)} .sel .portrait.a{--pc:var(--ai)}
 .sel .bigname{position:absolute;left:330px;top:24px;font-family:var(--display);font-size:92px;line-height:1;color:rgba(236,232,225,.06);white-space:nowrap;pointer-events:none}
@@ -132,7 +132,7 @@ button:focus-visible,textarea:focus-visible{outline:2px solid var(--fg);outline-
 .rtile.on{border-color:var(--fg);box-shadow:0 0 0 2px var(--fg);transform:translateY(-4px)}
 @media (hover:hover) and (pointer:fine){.rtile:hover{transform:translateY(-3px)}}
 .roster .hint{flex:1;font-size:12.5px;color:var(--fg2);padding-left:10px}
-.sel .right{position:absolute;right:28px;top:40px;width:180px;display:flex;flex-direction:column;gap:8px}
+.sel .right{position:absolute;right:28px;top:40px;width:190px;display:flex;flex-direction:column;gap:8px}
 .statbar{display:flex;flex-direction:column;gap:3px}
 .statbar .bar{height:6px;background:rgba(236,232,225,.1)}
 .statbar .bar i{display:block;height:100%}
@@ -292,6 +292,7 @@ button:focus-visible,textarea:focus-visible{outline:2px solid var(--fg);outline-
 .ccard .pick.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .ccard.withpick .ct{padding-right:66px}
 .modal{position:absolute;inset:0;z-index:30;background:rgba(7,12,18,.78);display:grid;place-items:center;animation:fade .2s ease}
+.modal.still{animation:none}
 .award{width:740px;padding:20px 22px;display:flex;flex-direction:column;gap:14px;background:var(--bg2)}
 .award h3{margin:0;font-family:var(--display);font-weight:400;font-size:26px}
 .award .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -329,7 +330,7 @@ button:focus-visible,textarea:focus-visible{outline:2px solid var(--fg);outline-
 .ending{position:absolute;inset:0;display:grid;grid-template-columns:340px 1fr;gap:10px}
 .ending .pic{position:relative;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
 .ending .pic{align-items:center}
-.ending .pic img{height:430px;width:auto;clip-path:polygon(9% 0,100% 0,91% 100%,0 100%)}
+.ending .pic img{height:min(calc(var(--sh,540px) - 110px),520px);width:auto;clip-path:polygon(9% 0,100% 0,91% 100%,0 100%)}
 .ending .body{display:flex;flex-direction:column;justify-content:center;gap:12px;padding:30px 40px 30px 0}
 .ending h2{margin:0;font-family:var(--display);font-weight:400;font-size:40px;line-height:1.05}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -339,9 +340,29 @@ button:focus-visible,textarea:focus-visible{outline:2px solid var(--fg);outline-
 .stat .v small{font-size:16px;color:var(--muted);margin-left:6px}
 .ending .say{border-left:3px solid var(--red);padding:6px 0 6px 14px;font-size:15.5px;line-height:1.6}
 .ending .say .lbl{display:block}
+.spec{display:flex;flex-direction:column;gap:2px;padding:10px 12px;background:rgba(236,232,225,.05);border:1px solid var(--line);border-top:3px solid var(--line2)}
+.spec.h{border-top-color:var(--human)} .spec.a{border-top-color:var(--ai)} .spec.pro{border-top-color:var(--pro)} .spec.con{border-top-color:var(--con)}
+.spec b{font-family:var(--display);font-weight:400;font-size:22px;line-height:1.15}
+.spec span:last-child{font-size:12px;color:var(--fg2)}
+.rtile .rl{position:absolute;left:0;right:0;bottom:4px;font-size:10px;font-weight:700;text-align:center;background:rgba(15,25,35,.8);padding:1px 0}
+.rtile .rl.pro{color:var(--pro)} .rtile .rl.con{color:var(--con)}
+.mode.one{flex:1;min-height:0;cursor:default;gap:10px}
+.mode.one .mhead{display:flex;flex-direction:column;gap:2px}
+.mode.one ul{font-size:13.5px;gap:4px}
+.mode.one .rw{align-items:center}
+.pips.one{grid-template-columns:1fr}
+.pips.one i{height:20px;font-family:var(--body);font-size:11.5px;letter-spacing:0}
+#rotate{display:none;position:fixed;inset:0;z-index:100;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;background:var(--bg);color:var(--fg)}
+#rotate b{font-family:var(--display);font-weight:400;font-size:26px}
+#rotate span{font-size:14px;color:var(--fg2)}
+#rotate .phone{width:46px;height:78px;border:3px solid var(--fg);position:relative;animation:turn 2.4s var(--ease) infinite}
+#rotate .phone::after{content:"";position:absolute;left:50%;bottom:5px;width:10px;height:3px;margin-left:-5px;background:var(--red)}
+@keyframes turn{0%,25%{transform:rotate(0)}55%,100%{transform:rotate(-90deg)}}
+@media (orientation:portrait){#rotate{display:flex}#stage{visibility:hidden}}
+@media (orientation:portrait) and (prefers-reduced-motion:reduce){#rotate .phone{animation:none;transform:rotate(-90deg)}}
 </style>
 
-<div id="root"><div id="stage" role="application" aria-label="필터 마을 사이버수사대 게임">
+<div id="root"><div id="rotate" role="alert"><div class="phone"></div><b>가로 화면으로 돌려 주세요</b><span>이 게임은 가로 화면에서만 할 수 있어요.</span></div><div id="stage" role="application" aria-label="필터 마을 사이버수사대 게임">
   <div class="bg" id="bg"></div>
   <div id="view"></div>
   <div id="over"></div>
@@ -521,33 +542,34 @@ const MOTION='다양한 사회 문제를 해결하기 위해 AI를 반드시 사
 const CIRC=['①','②','③','④','⑤','⑥','⑦','⑧'];
 const stage=document.getElementById('stage'), view=document.getElementById('view'), over=document.getElementById('over'), bgEl=document.getElementById('bg');
 let SCALE=1;
-function fit(){ SCALE=Math.min(innerWidth/960, innerHeight/540); stage.style.transform=`scale(${SCALE})`; }
+function fit(){ const W=innerWidth,H=innerHeight; const sh=Math.max(540,Math.min(720,Math.round(960*H/W))); stage.style.height=sh+'px'; stage.style.setProperty('--sh',sh+'px'); SCALE=Math.min(W/960,H/sh); stage.style.transform=`translate(-50%,-50%) scale(${SCALE})`; }
 addEventListener('resize',fit); fit();
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 /* ---------- 수사관 ---------- */
 const DETS={
- oh:{name:'오두식 경위',short:'오두식',age:'52세',type:'h',alias:'발로 뛰는 베테랑',quote:'"증거는 현장에 있다. 기계는 사람을 모른다."',
-   skill:'직접 조사 90초, 단서 보기 무제한',weak:'AI 조사 때 확신도 숫자가 안 보임',
-   hTime:90,hClue:Infinity,hCost:3,aClue:Infinity,aPct:false,aWhy:false,aWarn:false,ctx:false,hWarn:false,
-   belief:{side:'con',title:'기계는 사람을 모른다',text:'30년 동안 사건을 풀어 준 건 현장과 사람이었다. 기계는 말 뒤에 숨은 사정을 모른다.'},
-   L:{start:['신입 때부터 30년, 발로 뛰어서 범인 잡았다.','기계가 내 수첩보다 낫다고? 어디 한번 보자고.'],hOk:'봤지? 앞뒤 사정을 알아야 사람을 안다.',aOk:'…빠르긴 빠르군. 내가 사흘 걸릴 걸 3초에.',aFail:'거봐, 기계 말만 믿다가 무고한 사람 잡을 뻔했잖아.',hFail:'흠, 내 감이 무뎌졌나. 다시 본다.',time:'눈이 침침해서 원… 그사이 글이 또 퍼졌겠군.',endH:'역시 사람이 봐야 해. 다만… AI가 찾아 준 패턴은 나도 못 봤을 거야.',endA:'인정하마. 이 양은 사람 혼자서는 못 해. 그래도 마지막 판단은 사람이 해야지.'}},
- han:{name:'한지아 경감',short:'한지아',age:'34세',type:'h',alias:'맥락 읽는 프로파일러',quote:'"같은 말도 누가, 왜 했는지에 따라 다르다."',
-   skill:'직접 조사 때 맥락 단서가 자동으로 열림',weak:'AI 조사 때 단서 보기 2번만 가능',
-   hTime:60,hClue:3,hCost:6,aClue:2,aPct:true,aWhy:false,aWarn:false,ctx:true,hWarn:false,
-   belief:{side:'con',title:'말의 뜻은 맥락에 있다',text:'같은 말도 누가, 누구에게, 왜 했는지에 따라 장난이 되기도 하고 폭력이 되기도 한다. 단어만 보는 기계는 그걸 모른다.'},
-   L:{start:['"죽을래?"가 장난인지 협박인지는 단어가 아니라 관계가 말해 줘요.','그걸 보는 게 제 일이에요.'],hOk:'말의 뜻은 문장 밖에 있었어요.',aOk:'패턴 찾는 건 확실히 AI가 낫네요. 인정할 건 인정해야죠.',aFail:'AI는 "무슨 말"인지는 아는데 "왜 했는지"는 몰라요.',hFail:'맥락을 놓쳤네요. 다시 읽어 볼게요.',time:'맥락을 다 읽기엔 사건이 너무 많네요.',endH:'역시 말의 뜻은 사람이 읽어야 해요. 그래도 숨은 패턴은 AI 없이는 못 찾았어요.',endA:'AI가 이렇게 많이 잡아낼 줄은 몰랐어요. 그래도 확정 도장은 사람이 찍어야 해요.'}},
- ryu:{name:'류시온 경장',short:'류시온',age:'27세',type:'a',alias:'데이터 수사관',quote:'"사람 눈은 피곤하고 느리다. 데이터는 거짓말을 안 한다."',
-   skill:'AI가 무엇을 보고 판정했는지 형광펜 근거 표시',weak:'직접 조사 45초, 단서 보기 2번만 가능',
-   hTime:45,hClue:2,hCost:6,aClue:Infinity,aPct:true,aWhy:true,aWarn:false,ctx:false,hWarn:false,
-   belief:{side:'pro',title:'사람 눈은 지친다',text:'하루 수만 건의 신고를 사람이 다 볼 수는 없다. 사람은 지치고 느리지만 AI는 지치지 않는다.'},
-   L:{start:['하루 신고 수만 건이에요. 사람이 다 본다고요?','계산이 안 나와요. AI 돌리죠.'],hOk:'생각보다… 사람 눈도 쓸 만하네요.',aOk:'3초 컷. 이게 데이터 수사죠.',aFail:'확신도가 높았는데… 하필 틀린 데가 거기였네요.',hFail:'역시 사람 눈으로는 무리예요.',time:'45초 안에 이걸 다 읽으라고요? 그러니까 AI가 필요하다니까요.',endH:'직접 본 게 더 정확했네요. 데이터도 결국 사람이 읽어야 하나 봐요.',endA:'AI가 정답이었죠. 근데 AI가 틀린 걸 잡아낸 건… 제 눈이었어요.'}},
- baek:{name:'백하린 경위',short:'백하린',age:'31세',type:'a',alias:'AI 수사팀 리더',quote:'"AI 없이 이 많은 사건을 어떻게 막아? 마지막 도장은 사람이 찍는다."',
-   skill:'AI 확신도 75% 미만이면 경보 표시',weak:'직접 조사 때 숨은 패턴 데이터는 경고만 뜨고 힌트 없음',
-   hTime:60,hClue:3,hCost:6,aClue:Infinity,aPct:true,aWhy:false,aWarn:true,ctx:false,hWarn:true,
-   belief:{side:'pro',title:'양이 너무 많다',text:'AI 없이는 쏟아지는 사건을 막을 수 없다. AI가 찾고 사람이 확인하는 방식이 반드시 필요하다.'},
-   L:{start:['AI는 망원경이에요. 멀리 보게 해 주지만,','무엇을 볼지는 우리가 정해요.'],hOk:'AI 없이도 됐네. 대신 시간이 두 배 들었지만.',aOk:'AI가 찾고, 내가 확인했어. 이게 우리 팀 방식이야.',aFail:'경보가 안 떴다고 맞는 건 아니었어. 숫자가 높아도 의심해야 해.',hFail:'역시 맨눈으로는 한계가 있어.',time:'이 속도면 사건이 쌓이는 게 더 빨라.',endH:'직접 조사가 더 정확했어. AI는 도구지, 판사가 아니야.',endA:'AI 덕분에 빨랐어. 그래도 경보 없이 틀린 것들, 그게 제일 무서웠어.'}}
+ oh:{name:'오두식 경위',short:'오두식',age:'52세',type:'h',kind:'h+',alias:'발로 뛰는 베테랑',quote:'"증거는 현장에 있다. 기계는 사람을 모른다."',
+   skill:'제한 시간 90초, 단서 보기 무제한 (한 번에 −3초)',weak:'기록·이미지를 분석해야 보이는 숨은 패턴은 볼 수 없음',
+   hTime:90,hClue:Infinity,hCost:3,aClue:Infinity,aPct:true,aWhy:false,aWarn:false,ctx:false,hWarn:false,
+   belief:{side:'con',title:'기계는 사람을 모른다',text:'30년 동안 사건을 풀어 준 건 현장과 사람이었다. 기계는 말 뒤에 숨은 사정을 모른다. AI를 반드시 쓸 필요는 없다.'},
+   L:{start:['신입 때부터 30년, 발로 뛰어서 범인 잡았다.','기계 없이도 된다는 걸 보여 주지. 전부 내 눈으로 직접 본다.'],ok:'봤지? 앞뒤 사정을 알아야 사람을 안다.',fail:'흠, 내 감이 무뎌졌나. 다시 본다.',failAI:'',time:'눈이 침침해서 원… 그사이 글이 또 퍼졌겠군.',end:'역시 사람이 봐야 해. 앞뒤 사정을 아는 건 사람뿐이야. AI를 "반드시" 쓸 이유는 못 찾았다.'}},
+ han:{name:'한지아 경감',short:'한지아',age:'34세',type:'h',kind:'h-',alias:'맥락 읽는 프로파일러',quote:'"말의 뜻은 사람이 읽지만, 그 많은 말을 다 읽으려면 AI가 필요하다."',
+   skill:'맥락 단서가 필요한 증거는 단서가 자동으로 열림',weak:'제한 시간 60초, 단서 보기 2번만 가능 (한 번에 −6초)',
+   hTime:60,hClue:2,hCost:6,aClue:Infinity,aPct:true,aWhy:false,aWarn:false,ctx:true,hWarn:false,
+   belief:{side:'pro',title:'맥락은 읽어도 양은 못 따라간다',text:'맥락을 읽는 건 사람이 잘하지만, 쏟아지는 사건을 사람 혼자 다 읽을 수는 없다. AI가 반드시 함께해야 한다.'},
+   L:{start:['"죽을래?"가 장난인지 협박인지는 관계를 봐야 알아요.','근데 그걸 하루 수만 건 읽으라면요? 직접 해 보면서 사람의 한계를 확인할게요.'],ok:'맞혔지만… 이걸 하루 수만 건 하라고 하면 못 해요.',fail:'맥락을 놓쳤네요. 사람 눈엔 한계가 있어요.',failAI:'',time:'맥락을 다 읽기엔 사건이 너무 많네요. 이래서 AI가 필요해요.',end:'직접 해 보니 알겠어요. 사람은 맥락은 읽지만 양을 못 따라가요. AI는 반드시 필요해요.'}},
+ ryu:{name:'류시온 경장',short:'류시온',age:'27세',type:'a',kind:'a+',alias:'데이터 수사관',quote:'"사람 눈은 피곤하고 느리다. 데이터는 거짓말을 안 한다."',
+   skill:'AI 확신도 % 표시 + AI가 무엇을 보고 판정했는지 형광펜 근거',weak:'단서 보기 2번만 가능 (AI 판정을 거의 믿고 가야 함)',
+   hTime:60,hClue:3,hCost:6,aClue:2,aPct:true,aWhy:true,aWarn:false,ctx:false,hWarn:false,
+   belief:{side:'pro',title:'사람 눈은 지친다',text:'하루 수만 건의 신고를 사람이 다 볼 수는 없다. 사람은 지치고 느리지만 AI는 지치지 않는다. AI는 반드시 필요하다.'},
+   L:{start:['하루 신고 수만 건이에요. 사람이 다 본다고요?','계산이 안 나와요. 전부 AI로 돌립니다.'],ok:'3초 컷. 이게 데이터 수사죠.',fail:'확신도가 높았는데… 하필 틀린 데가 거기였네요.',failAI:'',time:'',end:'AI 없이는 이 많은 사건을 절대 못 막아요. 틀린 것도 있었지만, 그래도 AI는 반드시 필요해요.'}},
+ baek:{name:'백하린 경위',short:'백하린',age:'31세',type:'a',kind:'a-',alias:'AI 감사관',quote:'"AI는 망원경이야. 멀리 보게 해 주지만, 판결은 못 해."',
+   skill:'AI 확신도 75% 미만이면 경보 표시, 단서 보기 무제한',weak:'AI가 무엇을 보고 판정했는지 근거는 안 보임',
+   hTime:60,hClue:3,hCost:6,aClue:Infinity,aPct:true,aWhy:false,aWarn:true,ctx:false,hWarn:false,
+   belief:{side:'con',title:'AI는 도구지, 판사가 아니다',text:'AI는 빠르지만 틀린다. AI에게 판단을 "반드시" 맡기면 억울한 사람이 생긴다. 마지막 판단은 사람이 해야 한다.'},
+   L:{start:['AI는 망원경이에요. 멀리 보게 해 주지만,','판결까지 맡기면 안 돼요. AI가 어디서 틀리는지 오늘 증명해 볼게요.'],ok:'AI가 틀린 걸 내가 잡아냈어. 그러니까 판결은 사람이 해야 해.',fail:'경보가 안 떴다고 맞는 건 아니었어. 숫자가 높아도 의심해야 해.',failAI:'',time:'',end:'AI 덕분에 빨랐지만, 경보 없이 틀린 것도 많았어. AI는 도구지, 판사가 아니야.'}}
 };
+const KIND_OWNER={'h+':'oh','h-':'han','a+':'ryu','a-':'baek'};
 const CHIEF={name:'강철민 반장',face:IMG.chiefFace,big:IMG.chief};
 
 /* ---------- 카드 ---------- */
@@ -558,8 +580,8 @@ Object.keys(DETS).forEach(k=>{ const b=DETS[k].belief; CARDS['b-'+k]={id:'b-'+k,
 const FIELD_CARD_IDS=Object.keys(CARDS).filter(id=>!id.startsWith('b-'));
 
 /* ---------- 저장 ---------- */
-const KEY='filter-village-v1';
-const fresh=()=>({det:null,res:{},cards:{},stats:{h:{ok:0,tr:0},a:{ok:0,tr:0}},stance:'',picks:{pro:[],con:[]},reason:'',intro:false,endSeen:false});
+const KEY='filter-village-v2';
+const fresh=()=>({det:null,res:{},cards:{},stats:{},stance:'',picks:{pro:[],con:[]},reason:'',intro:{},endSeen:{}});
 let S=fresh();
 try{ const r=JSON.parse(localStorage.getItem(KEY)||'null'); if(r&&typeof r==='object') S=Object.assign(fresh(),r); }catch(e){}
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
@@ -576,8 +598,8 @@ const typeLbl=t=>t==='h'?'사람 중심':'AI 중심';
 const pad2=n=>String(n).padStart(2,'0');
 function whoHTML(extra){ const d=det(); return `<span class="who ${d.type}"><img src="${detFace()}" alt="">${d.name}${extra||''}</span>`; }
 function hudHTML(left){
-  const n=FIELD_CARD_IDS.filter(id=>S.cards[id]).length;
-  return `<div class="topbar">${left||''}${whoHTML(` <span class="tag ${det().type}">${typeLbl(det().type)}</span>`)}<span class="spacer"></span><span class="counter"><span class="lbl">카드</span><b>${pad2(n)}</b><span class="lbl">/ 32</span></span><button class="btn sm" data-act="notes">수사 노트</button></div>`;
+  const n=myCount(), d=det();
+  return `<div class="topbar">${left||''}${whoHTML(` <span class="tag ${d.type}">${d.type==='h'?'직접 조사':'AI 조사'}</span><span class="tag ${d.belief.side}">${d.belief.side==='pro'?'찬성':'반대'}</span>`)}<span class="spacer"></span><span class="counter"><span class="lbl">${KIND[d.kind]}</span><b>${n}</b><span class="lbl">/ 8</span></span><button class="btn sm" data-act="notes">수사 노트</button></div>`;
 }
 
 /* 대화 */
@@ -612,78 +634,83 @@ function showTitle(){
 }
 
 /* ---------- 수사관 선택 ---------- */
+const modeLbl=t=>t==='h'?'직접 조사':'AI 조사';
+function cardKindLbl(k){ const side=k==='h+'||k==='a-'?'반대':'찬성'; return `${KIND[k]} 카드 · ${side} 근거`; }
 function showSelect(){
   stopTimer(); over.innerHTML=''; setBg(IMG.office,'soft');
   const k=tmp.pick||S.det||'oh'; tmp.pick=k; const d=DETS[k];
-  const hT=Math.round(d.hTime/90*100), hC=d.hClue===Infinity?100:Math.round(d.hClue/3*70), aI=(d.aPct?40:0)+(d.aWhy?30:0)+(d.aWarn?30:0)+(d.aClue===Infinity?20:0);
-  const bar=(lbl,v,col)=>`<div class="statbar"><span class="lbl">${lbl}</span><div class="bar"><i style="width:${Math.min(100,v)}%;background:${col}"></i></div></div>`;
+  const side=d.belief.side;
   render(`<div class="sel">
     <div class="bigname">${esc(d.short)}</div>
     <div class="portrait ${d.type}"><img src="${IMG.det[k].full}" alt="${d.name}"><div class="edge"></div></div>
     <div class="info">
       <span class="lbl r enter">수사관 선택</span>
-      <div class="enter" style="--i:1"><span class="tag ${d.type}">${typeLbl(d.type)}</span></div>
+      <div class="enter" style="--i:1;display:flex;gap:6px"><span class="tag ${d.type}">${modeLbl(d.type)}</span><span class="tag ${side}">${side==='pro'?'찬성':'반대'}</span></div>
       <h2 class="enter" style="--i:2">${d.name}</h2>
       <div class="alias enter" style="--i:3">${d.age} · ${d.alias}</div>
       <div class="quote enter" style="--i:4">${esc(d.quote)}</div>
       <div class="abil s enter" style="--i:5"><span class="k">S</span><span class="t"><span class="lbl">강점</span>${esc(d.skill)}</span></div>
       <div class="abil w enter" style="--i:6"><span class="k">W</span><span class="t"><span class="lbl">약점</span>${esc(d.weak)}</span></div>
-      <div class="abil b enter" style="--i:7"><span class="k">B</span><span class="t"><span class="lbl">시작 신념 · ${d.belief.side==='pro'?'찬성':'반대'}</span>${esc(d.belief.title)}</span></div>
+      <div class="abil b enter" style="--i:7"><span class="k">B</span><span class="t"><span class="lbl">신념 · ${side==='pro'?'찬성':'반대'}</span>${esc(d.belief.title)}</span></div>
     </div>
     <div class="right enter" style="--i:4">
-      ${bar('직접 조사 시간',hT,'var(--human)')}${bar('직접 조사 단서',hC,'var(--human)')}${bar('AI 정보량',aI,'var(--ai)')}
+      <div class="spec ${d.type}"><span class="lbl">수사 방식</span><b>${modeLbl(d.type)}</b><span>${d.type==='h'?'증거를 내 눈으로 하나씩 판정':'AI 판정을 보고 확정하거나 뒤집기'}</span></div>
+      <div class="spec ${side}"><span class="lbl">모으는 카드</span><b>${KIND[d.kind]}</b><span>${side==='pro'?'찬성':'반대'} 근거 카드 8장</span></div>
     </div>
-    <div class="roster">${Object.entries(DETS).map(([kk,dd])=>`<button class="rtile ${dd.type} ${kk===k?'on':''}" data-act="pickdet" data-k="${kk}" aria-pressed="${kk===k}" aria-label="${dd.name}"><img src="${IMG.det[kk].face}" alt=""></button>`).join('')}
-      <span class="hint">사람 중심 수사관은 직접 조사에, AI 중심 수사관은 AI 조사에 강해. 어떤 수사관이든 카드 32장은 모두 모을 수 있어.</span>
+    <div class="roster">${Object.entries(DETS).map(([kk,dd])=>`<button class="rtile ${dd.type} ${kk===k?'on':''}" data-act="pickdet" data-k="${kk}" aria-pressed="${kk===k}" aria-label="${dd.name}"><img src="${IMG.det[kk].face}" alt=""><span class="rl ${dd.belief.side}">${dd.type==='h'?'직접':'AI'}·${dd.belief.side==='pro'?'찬성':'반대'}</span></button>`).join('')}
+      <span class="hint">수사관에 따라 수사 방식과 모으는 카드가 정해져. 다른 수사관으로 다시 하면 다른 카드를 모을 수 있어.</span>
       <button class="btn ghost" data-act="title">뒤로</button><button class="btn" data-act="confirmdet">수사관 확정</button></div>
   </div>`);
 }
 
 /* ---------- 본부 ---------- */
-function fieldDone(fi){ return [0,1,2].map(si=>S.res[fi+'-'+si]||{}); }
+function myRes(){ return (S.res[S.det]=S.res[S.det]||{}); }
+function fieldDone(fi){ const r=myRes(); return [0,1,2].map(si=>r[fi+'-'+si]||''); }
+function myCount(){ const k=det().kind; return META.filter((F,fi)=>S.cards[fi+k]).length; }
 function showHQ(){
   stopTimer(); over.innerHTML=''; setBg(IMG.office,'dim');
-  render(hudHTML(`<button class="btn sm ghost" data-act="title">처음 화면</button>`)+`<div class="hqhead"><div><span class="lbl r">Sector Select</span><h2>수사할 분야를 골라</h2></div></div><div class="hq">${META.map((F,fi)=>{
-    const r=fieldDone(fi);
+  const d=det(), k=d.kind;
+  render(hudHTML(`<button class="btn sm ghost" data-act="title">처음 화면</button>`)+`<div class="hqhead"><div><span class="lbl r">Sector Select · ${modeLbl(d.type)} · ${KIND[k]} 카드</span><h2>수사할 분야를 골라</h2></div></div><div class="hq">${META.map((F,fi)=>{
+    const r=fieldDone(fi); const got=S.cards[fi+k];
     return `<button class="ftile enter" style="--i:${fi};--fc:${F.color}" data-act="field" data-f="${fi}"><div class="tbg" style="background-image:url(${IMG.bg[fi]})"></div><div class="tveil"></div>
       <span class="no">${pad2(fi+1)}</span>
       <span class="fn">${F.name}</span>
-      <span class="faces">${F.sus.map((s,si)=>`<span class="${(r[si].h==='ok'||r[si].a==='ok')?'solved':''}" title="${esc(s.name)}"><img src="${IMG.face[fi*3+si]}" alt=""></span>`).join('')}</span>
-      <span class="pips">${['h+','h-','a+','a-'].map(k=>`<i class="${k[0]} ${S.cards[fi+k]?'on':''}" title="${KIND[k]}">${k[0]==='h'?'사람':'AI'}${k[1]==='+'?'+':'−'}</i>`).join('')}</span></button>`;}).join('')}</div>`);
-  if(!S.intro){ S.intro=true; save();
-    say([...chief('어서 와. 이번 주에 용의자 24명이 들어왔어.','시의회가 "AI 수사를 의무로 하자"는 조례를 표결하는데, 네 수사 결과가 근거가 될 거야.','분야마다 용의자가 3명씩 있어. 직접 볼지, AI를 돌릴지는 네가 정해.','데이터 5개 중 4개 이상 맞혀야 사건 종결이다.'),...me(...det().L.start)]);
+      <span class="faces">${F.sus.map((s,si)=>`<span class="${r[si]==='ok'?'solved':''}" title="${esc(s.name)}"><img src="${IMG.face[fi*3+si]}" alt=""></span>`).join('')}</span>
+      <span class="pips one"><i class="${k[0]} ${got?'on':''}">${got?'✓ ':''}${KIND[k]} 카드</i></span></button>`;}).join('')}</div>`);
+  if(!S.intro[S.det]){ S.intro[S.det]=true; save();
+    say([...chief('어서 와. 이번 주에 용의자 24명이 들어왔어.','시의회가 "AI 수사를 의무로 하자"는 조례를 표결하는데, 네 수사 결과가 근거가 될 거야.',`넌 ${modeLbl(d.type)} 담당이야. 분야마다 용의자 한 명을 잡으면 그 분야의 "${KIND[k]}" 카드를 받는다.`,'데이터 5개 중 4개 이상 맞혀야 사건 종결이다.'),...me(...d.L.start)]);
   }
 }
 
 /* ---------- 분야 ---------- */
 function showField(fi){
-  stopTimer(); over.innerHTML=''; tmp.f=fi; const F=META[fi]; setBg(IMG.bg[fi],'dim');
-  const r=fieldDone(fi);
+  stopTimer(); over.innerHTML=''; tmp.f=fi; const F=META[fi], d=det(), k=d.kind; setBg(IMG.bg[fi],'dim');
+  const r=fieldDone(fi); const got=S.cards[fi+k];
   render(hudHTML(`<button class="btn sm ghost" data-act="hq">← 본부</button>`)+`
-    <div class="fhead enter"><div><span class="lbl r">Sector ${pad2(fi+1)}</span><h2>${F.name}</h2></div><p>직접 조사로 성공하면 <b>사람 장점·단점</b>, AI 조사로 성공하면 <b>AI 장점·단점</b> 카드를 받아.</p></div>
+    <div class="fhead enter"><div><span class="lbl r">Sector ${pad2(fi+1)}</span><h2>${F.name}</h2></div><p>${got?`이 분야의 <b>${KIND[k]}</b> 카드는 이미 받았어. 다른 용의자도 연습 삼아 조사할 수 있어.`:`용의자 한 명을 ${modeLbl(d.type)}로 잡으면 <b>${KIND[k]}</b> 카드를 받아.`}</p></div>
     <div class="sus3">${F.sus.map((s,si)=>`<button class="scard enter" style="--i:${si+1}" data-act="sus" data-s="${si}">
       <div class="mug"><img src="${IMG.mug[fi*3+si]}" alt="${esc(s.name)}"><span class="cid">${s.id}</span></div>
       <div class="info"><span class="nm">${esc(s.name)}</span><span class="meta">${esc(s.sub)}</span><span class="chg"><span>혐의</span>${esc(s.charge)}</span>
-      <span class="badges">${r[si].h==='ok'?'<span class="tag h">직접 조사 성공</span>':''}${r[si].a==='ok'?'<span class="tag a">AI 조사 성공</span>':''}${!r[si].h&&!r[si].a?'<span class="tag">미조사</span>':''}${(r[si].h==='fail'||r[si].a==='fail')&&!(r[si].h==='ok'||r[si].a==='ok')?'<span class="tag no">재조사 필요</span>':''}</span></div></button>`).join('')}</div>`);
+      <span class="badges">${r[si]==='ok'?`<span class="tag ${d.type}">사건 종결</span>`:r[si]==='fail'?'<span class="tag no">재조사 필요</span>':'<span class="tag">미조사</span>'}</span></div></button>`).join('')}</div>`);
 }
 
 /* ---------- 용의자 ---------- */
 function showSuspect(si){
-  stopTimer(); over.innerHTML=''; tmp.s=si; const fi=tmp.f, F=META[fi], s=F.sus[si], d=det(); setBg(IMG.bg[fi],'dim');
-  const gotH=S.cards[fi+'h+'], gotA=S.cards[fi+'a+'];
-  const hl=[`제한 시간 <b>${d.hTime}초</b>`, d.hClue===Infinity?`단서 보기 <b>무제한</b> (한 번에 −${d.hCost}초)`:`단서 보기 <b>${d.hClue}번</b> (한 번에 −${d.hCost}초)`, d.ctx?'<b>맥락 단서 자동 공개</b>':'', d.hWarn?'숨은 패턴 데이터에 <b>경고</b>만 뜸':''].filter(Boolean);
-  const al=['AI가 5개를 3초 만에 판정','판정마다 확정하거나 뒤집기', d.aPct?'AI 확신도 <b>% 표시</b>':'확신도 숫자 <b>안 보임</b>', d.aWhy?'<b>AI 근거 형광펜</b> 표시':'', d.aWarn?'확신도 75% 미만 <b>경보</b>':'', d.aClue===Infinity?'단서 보기 무제한':`단서 보기 <b>${d.aClue}번</b>`].filter(Boolean);
+  stopTimer(); over.innerHTML=''; tmp.s=si; const fi=tmp.f, F=META[fi], s=F.sus[si], d=det(), k=d.kind; setBg(IMG.bg[fi],'dim');
+  const got=S.cards[fi+k];
+  const rules=d.type==='h'
+    ?[`증거 5개를 내 눈으로 하나씩 판정`,`제한 시간 <b>${d.hTime}초</b>`, d.hClue===Infinity?`단서 보기 <b>무제한</b> (한 번에 −${d.hCost}초)`:`단서 보기 <b>${d.hClue}번</b> (한 번에 −${d.hCost}초)`, d.ctx?'맥락이 필요한 증거는 <b>단서 자동 공개</b>':'숨은 패턴(기록·이미지 분석)은 <b>볼 수 없음</b>']
+    :['AI가 5개를 3초 만에 판정','판정마다 <b>확정</b>하거나 <b>뒤집기</b>', d.aPct?'AI 확신도 <b>% 표시</b>':'', d.aWhy?'<b>AI 근거 형광펜</b> 표시':'', d.aWarn?'확신도 75% 미만 <b>경보</b>':'', d.aClue===Infinity?'단서 보기 <b>무제한</b>':`단서 보기 <b>${d.aClue}번</b>`].filter(Boolean);
   render(hudHTML(`<button class="btn sm ghost" data-act="field" data-f="${fi}">← ${F.name}</button>`)+`<div class="susp">
     <div class="left enter"><div class="mugbig"><img src="${IMG.mug[fi*3+si]}" alt="${esc(s.name)}"><span class="cid">CASE ${s.id}</span></div></div>
     <div class="right">
       <div class="panel dossier enter" style="--i:1"><span class="lbl">사건 번호 2026-${s.id} · ${F.name}</span><div class="nm">${esc(s.name)}</div><div class="meta">${esc(s.sub)}</div>
         <div class="chg"><span class="tag no">혐의</span>${esc(s.charge)}</div><div class="stmt">"${esc(s.stmt)}"</div></div>
-      <div class="modes">
-        <button class="mode h enter" style="--i:2" data-act="start" data-m="h"><span class="lbl">Manual</span><span class="mt">직접 조사</span><ul>${hl.map(x=>`<li>${x}</li>`).join('')}</ul><span class="rw">성공 보상 · 사람 장점·단점 카드 ${gotH?'<span class="got">✓ 받음</span>':''}</span></button>
-        <button class="mode a enter" style="--i:3" data-act="start" data-m="a"><span class="lbl">AI Scan</span><span class="mt">AI 조사</span><ul>${al.map(x=>`<li>${x}</li>`).join('')}</ul><span class="rw">성공 보상 · AI 장점·단점 카드 ${gotA?'<span class="got">✓ 받음</span>':''}</span></button>
-      </div></div></div>`);
+      <div class="mode one ${d.type} enter" style="--i:2"><div class="mhead"><span class="lbl">${d.type==='h'?'Manual':'AI Scan'}</span><span class="mt">${modeLbl(d.type)}</span></div>
+        <ul>${rules.map(x=>`<li>${x}</li>`).join('')}</ul>
+        <div class="rw">성공 보상 · ${cardKindLbl(k)} ${got?'<span class="got">✓ 이미 받음</span>':''}<span class="spacer"></span><button class="btn ${d.type==='h'?'human':'ai'}" data-act="start">수사 시작</button></div></div>
+    </div></div>`);
 }
-
 /* ---------- 직접 조사 ---------- */
 function startHuman(){
   const d=det(); const fi=tmp.f, si=tmp.s;
@@ -742,23 +769,21 @@ function renderAI(){
 /* ---------- 결과 ---------- */
 function finish(){
   stopTimer();
-  const v=tmp.inv, items=ITEMS[v.fi*3+v.si], d=det();
-  const right=items.map((it,i)=>v.ans[i]===it.a);
-  const n=right.filter(Boolean).length, ok=n>=4;
-  const key=v.fi+'-'+v.si; const r=S.res[key]||{}; if(r[v.mode]!=='ok') r[v.mode]=ok?'ok':'fail'; S.res[key]=r;
-  S.stats[v.mode].tr++; if(ok) S.stats[v.mode].ok++;
-  let newCards=[];
-  if(ok){ [v.mode+'+',v.mode+'-'].forEach(k=>{ const id=v.fi+k; if(!S.cards[id]){ S.cards[id]=true; newCards.push(id);} }); }
+  const v=tmp.inv, items=ITEMS[v.fi*3+v.si], d=det(), k=d.kind;
+  const n=items.filter((it,i)=>v.ans[i]===it.a).length, ok=n>=4;
+  const key=v.fi+'-'+v.si; const r=myRes(); if(r[key]!=='ok') r[key]=ok?'ok':'fail';
+  const st=(S.stats[S.det]=S.stats[S.det]||{ok:0,tr:0}); st.tr++; if(ok) st.ok++;
+  const newCards=[]; if(ok){ const id=v.fi+k; if(!S.cards[id]){ S.cards[id]=true; newCards.push(id);} }
   if(!S.cards['b-'+S.det]) S.cards['b-'+S.det]=true;
   save();
   const keptAll=v.mode==='a'&&items.every((it,i)=>v.ans[i]===it.v);
   tmp.result={ok,n,newCards,keptAll,timeout:!!v.timeout,mode:v.mode};
   renderResult();
   let lines;
-  if(ok) lines=me(v.mode==='h'?d.L.hOk:d.L.aOk);
+  if(ok) lines=me(d.L.ok);
   else if(v.timeout) lines=[...me(d.L.time),...chief('시간 초과. 그사이 같은 글이 300개 더 퍼졌어. 다시 조사해!')];
-  else if(keptAll) lines=[...chief('AI가 틀린 걸 그대로 도장 찍었구나. 확정 버튼을 누른 건 너야.'),...me(d.L.aFail)];
-  else lines=[...chief('증거가 부족해. 이대로면 무고한 사람이 벌을 받거나, 범인이 풀려나. 다시 조사해!'),...me(v.mode==='h'?d.L.hFail:d.L.aFail)];
+  else if(keptAll) lines=[...chief('AI가 틀린 걸 그대로 도장 찍었구나. 확정 버튼을 누른 건 너야.'),...me(d.L.fail)];
+  else lines=[...chief('증거가 부족해. 이대로면 무고한 사람이 벌을 받거나, 범인이 풀려나. 다시 조사해!'),...me(d.L.fail)];
   setTimeout(()=>say(lines),700);
 }
 function renderResult(){
@@ -767,16 +792,15 @@ function renderResult(){
   render(`<div class="topbar">${whoHTML(` <span class="tag ${v.mode}">${v.mode==='h'?'직접 조사':'AI 조사'}</span>`)}<span class="tag">${esc(s.name)} · CASE ${s.id}</span></div>
   <div class="banner ${R.ok?'ok':'no'}"><div class="sub"><span class="lbl">${R.ok?'Case Closed':'Insufficient Evidence'}</span><span class="big">${R.ok?'사건 종결':'증거 부족'}</span></div><div class="sc"><b>${R.n} / 5</b><span class="lbl">${R.ok?'4개 이상 정답':(R.timeout?'시간 초과 · ':'')+'4개 이상 필요'}</span></div></div>
   <div class="res"><div class="reslist enter">${items.map((it,i)=>{ const ok=v.ans[i]===it.a; return `<div class="ritem ${ok?'ok':'no'}"><span class="mk">${ok?'O':'X'}</span><div><div class="s">${esc(it.s)}</div><div class="ans"><span class="tag ${ok?'ok':'no'}">내 판정 ${lbl(v.ans[i])}</span><span class="tag dark">정답 ${lbl(it.a)}</span>${v.mode==='a'?`<span class="tag a">AI ${lbl(it.v)}</span>`:''}${it.p?'<span class="tag a">숨은 패턴</span>':''}</div><div class="e">${esc(it.e)}${it.p?` (${esc(it.p)})`:''}</div></div></div>`;}).join('')}</div>
-    <div class="resbtns enter" style="--i:2">${R.ok?(R.newCards.length?`<button class="btn" data-act="award">카드 ${R.newCards.length}장 받기</button>`:`<button class="btn" data-act="field" data-f="${v.fi}">현장으로</button>`):`<button class="btn" data-act="retry">다시 조사</button><button class="btn ghost" data-act="field" data-f="${v.fi}">다른 용의자</button>`}</div></div>`);
+    <div class="resbtns enter" style="--i:2">${R.ok?(R.newCards.length?`<button class="btn" data-act="award">카드 받기</button>`:`<button class="btn" data-act="field" data-f="${v.fi}">현장으로</button>`):`<button class="btn" data-act="retry">다시 조사</button><button class="btn ghost" data-act="field" data-f="${v.fi}">다른 용의자</button>`}</div></div>`);
 }
 function showAward(){
   const R=tmp.result; if(!R||!R.newCards.length) return;
-  over.innerHTML=`<div class="modal"><div class="panel award"><span class="lbl r">Evidence Card Acquired</span><h3>새 카드 ${R.newCards.length}장</h3><div class="two">${R.newCards.map(id=>cardHTML(CARDS[id],false)).join('')}</div><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" data-act="afteraward">수사 노트에 넣기</button></div></div></div>`;
+  over.innerHTML=`<div class="modal"><div class="panel award"><span class="lbl r">Evidence Card Acquired</span><h3>${KIND[det().kind]} 카드 획득</h3><div class="two" style="grid-template-columns:1fr;max-width:420px">${R.newCards.map(id=>cardHTML(CARDS[id],false)).join('')}</div><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" data-act="afteraward">수사 노트에 넣기</button></div></div></div>`;
 }
 function afterAward(){
   over.innerHTML='';
-  const all=FIELD_CARD_IDS.every(id=>S.cards[id]);
-  if(all&&!S.endSeen){ S.endSeen=true; save(); showEnding(); } else showField(tmp.inv.fi);
+  if(myCount()===8&&!S.endSeen[S.det]){ S.endSeen[S.det]=true; save(); showEnding(); } else showField(tmp.inv.fi);
 }
 
 /* ---------- 카드 · 수사 노트 ---------- */
@@ -786,7 +810,7 @@ function cardHTML(c,withPick){
   const on=S.picks[c.side].includes(c.id);
   return `<div class="ccard ${c.side} ${withPick?'withpick':''}">${withPick?`<button class="pick ${on?'on':''}" data-act="pick" data-id="${c.id}" aria-pressed="${on}">${on?'✓ 고름':'고르기'}</button>`:''}<div class="cw"><span class="tag ${c.side}">${sideLbl}</span>${kt}</div><div class="ct">${esc(c.title)}</div><div class="cx">${esc(c.text)}</div><div class="cw"><span class="who2">${esc(c.who)}</span></div></div>`;
 }
-function lockHTML(c){ return `<div class="ccard lock"><div class="ct">???</div><div class="cx">${esc(META[c.fi].name)} · ${KIND[c.kind]} — ${c.kind[0]==='h'?'직접 조사':'AI 조사'}로 이 분야 용의자를 잡으면 열려요.</div></div>`; }
+function lockHTML(c){ const o=KIND_OWNER[c.kind]; return `<div class="ccard lock"><div class="ct">???</div><div class="cx">${esc(META[c.fi].name)} · ${KIND[c.kind]} — ${o===S.det?'이 분야 용의자를 잡으면 열려요.':`${DETS[o].name}으로 수사하면 모을 수 있어요.`}</div></div>`; }
 function showNotes(tab){
   stopTimer(); tmp.ntab=tab||tmp.ntab||'cards';
   const n=FIELD_CARD_IDS.filter(id=>S.cards[id]).length;
@@ -801,28 +825,29 @@ function showNotes(tab){
       <div class="field" style="flex:1"><label for="reason">그렇게 생각한 이유 (수사한 용의자나 카드 이름을 넣어서)</label><textarea id="reason" style="flex:1" placeholder="예) 장민혁 사건에서 AI는 진짜 미납 안내까지 스미싱으로 판단했다. 그래서…">${esc(S.reason)}</textarea></div></div>
       <div><div class="field" style="flex:1"><label for="out">Padlet에 붙일 수사 보고서</label><textarea id="out" class="out" style="flex:1" readonly>${esc(buildOutput())}</textarea></div><div style="display:flex;gap:10px;align-items:center"><button class="btn" data-act="copy">복사하기</button><span style="font-size:12.5px;color:var(--fg2)">복사가 안 되면 글상자를 눌러 전체 선택 후 복사해.</span></div></div></div>`;
   }
-  over.innerHTML=`<div class="modal" style="place-items:stretch"><div class="panel notes"><div class="nhead"><h2>수사 노트</h2><div class="tabs" role="tablist"><button class="${tmp.ntab==='cards'?'on':''}" data-act="ntab" data-t="cards" role="tab">카드 ${n}/32 + 신념 1</button><button class="${tmp.ntab==='final'?'on':''}" data-act="ntab" data-t="final" role="tab">내 입장 정리</button></div><span class="spacer"></span><button class="btn sm" data-act="closenotes">닫기</button></div>${body}</div></div>`;
+  const still=!!over.querySelector('.notes');
+  over.innerHTML=`<div class="modal ${still?'still':''}" style="place-items:stretch"><div class="panel notes"><div class="nhead"><h2>수사 노트</h2><div class="tabs" role="tablist"><button class="${tmp.ntab==='cards'?'on':''}" data-act="ntab" data-t="cards" role="tab">카드 ${n}/32 + 신념 1</button><button class="${tmp.ntab==='final'?'on':''}" data-act="ntab" data-t="final" role="tab">내 입장 정리</button></div><span class="spacer"></span><button class="btn sm" data-act="closenotes">닫기</button></div>${body}</div></div>`;
   const ta=document.getElementById('reason'); if(ta) ta.addEventListener('input',()=>{ S.reason=ta.value; save(); const o=document.getElementById('out'); if(o) o.value=buildOutput(); });
 }
 function buildOutput(){
   const d=S.det?DETS[S.det]:null;
   const line=side=>S.picks[side].length?S.picks[side].map((id,i)=>{ const c=CARDS[id]; return `${i+1}. ${c.title} — ${c.text} (${c.who})`; }).join('\n'):'(아직 고르지 않음)';
   const st=S.stance==='pro'?'찬성':S.stance==='con'?'반대':'(아직 정하지 않음)';
-  const sr=m=>`${S.stats[m].ok}번 성공 / ${S.stats[m].tr}번 조사`;
-  return `[필터 마을 수사 보고서] 학번 이름: (직접 입력하세요)\n논제: ${MOTION}\n수사관: ${d?d.name:'-'}\n수사 기록: 직접 조사 ${sr('h')} · AI 조사 ${sr('a')}\n\n■ 찬성 근거 (AI를 반드시 써야 한다)\n${line('pro')}\n\n■ 반대 근거 (반드시 쓸 필요는 없다)\n${line('con')}\n\n■ 내 입장: ${st}\n${S.reason||''}`.trim();
+  const sr=Object.keys(DETS).filter(k=>S.stats[k]&&S.stats[k].tr).map(k=>`${DETS[k].short}(${DETS[k].type==='h'?'직접':'AI'}) ${S.stats[k].ok}번 성공 / ${S.stats[k].tr}번 조사`).join(' · ')||'-';
+  return `[필터 마을 수사 보고서] 학번 이름: (직접 입력하세요)\n논제: ${MOTION}\n수사관: ${d?d.name:'-'}\n수사 기록: ${sr}\n\n■ 찬성 근거 (AI를 반드시 써야 한다)\n${line('pro')}\n\n■ 반대 근거 (반드시 쓸 필요는 없다)\n${line('con')}\n\n■ 내 입장: ${st}\n${S.reason||''}`.trim();
 }
 
 /* ---------- 엔딩 ---------- */
 function showEnding(){
   over.innerHTML=''; const d=det(); setBg(IMG.office,'soft');
-  const rate=m=>S.stats[m].tr?Math.round(S.stats[m].ok/S.stats[m].tr*100):0;
-  const hr=rate('h'), ar=rate('a'); const line=hr>=ar?d.L.endH:d.L.endA;
+  const st=S.stats[S.det]||{ok:0,tr:0}; const rate=st.tr?Math.round(st.ok/st.tr*100):0;
+  const others=Object.entries(DETS).filter(([k])=>k!==S.det).map(([k,o])=>`${o.short}(${o.type==='h'?'직접':'AI'}·${o.belief.side==='pro'?'찬성':'반대'})`).join(', ');
   render(`<div class="ending"><div class="pic enter"><img src="${IMG.det[S.det].full}" alt="${d.name}"></div><div class="body">
-    <span class="lbl r enter">All Cases Closed</span><h2 class="enter" style="--i:1">카드 32장 수집 완료</h2>
-    <div class="stats enter" style="--i:2"><div class="stat h"><span class="lbl">직접 조사 성공률</span><div class="v">${hr}%<small>${S.stats.h.ok}/${S.stats.h.tr}</small></div></div><div class="stat a"><span class="lbl">AI 조사 성공률</span><div class="v">${ar}%<small>${S.stats.a.ok}/${S.stats.a.tr}</small></div></div></div>
-    <div class="say enter" style="--i:3"><span class="lbl">${d.name}</span>"${esc(line)}"</div>
-    <p class="enter" style="--i:4;margin:0;font-size:13.5px;color:var(--fg2)">이제 수사 노트에서 찬성·반대 카드를 3장씩 고르고, 너의 입장을 정해 줘. 수사관의 신념과 달라도 괜찮아.</p>
-    <div class="enter" style="--i:5;display:flex;gap:8px"><button class="btn" data-act="notesfinal">내 입장 정리하기</button><button class="btn ghost" data-act="hq">본부로</button></div></div></div>`);
+    <span class="lbl r enter">All Sectors Closed</span><h2 class="enter" style="--i:1">${KIND[d.kind]} 카드 8장 완성</h2>
+    <div class="stats enter" style="--i:2"><div class="stat ${d.type}"><span class="lbl">${d.type==='h'?'직접':'AI'} 조사 성공률</span><div class="v">${rate}%<small>${st.ok}/${st.tr}</small></div></div><div class="stat ${d.type}"><span class="lbl">모은 카드</span><div class="v">8<small>${d.belief.side==='pro'?'찬성':'반대'} 근거</small></div></div></div>
+    <div class="say enter" style="--i:3"><span class="lbl">${d.name}</span>"${esc(d.L.end)}"</div>
+    <p class="enter" style="--i:4;margin:0;font-size:13.5px;color:var(--fg2)">반대쪽 근거도 알고 싶다면 다른 수사관(${esc(others)})으로 다시 수사해 봐. 모은 카드는 그대로 남아.</p>
+    <div class="enter" style="--i:5;display:flex;gap:8px"><button class="btn" data-act="notesfinal">내 입장 정리하기</button><button class="btn ghost" data-act="select">다른 수사관으로</button></div></div></div>`);
 }
 
 /* ---------- 이벤트 ---------- */
@@ -839,7 +864,7 @@ stage.addEventListener('click',e=>{
     case 'reset': if(tmp.confirmReset){ S=fresh(); save(); tmp={}; showTitle(); toast('기록을 모두 지웠어'); } else { tmp.confirmReset=true; b.textContent='한 번 더 누르면 모든 기록이 지워져요'; setTimeout(()=>{tmp.confirmReset=false;},4000); } break;
     case 'field': showField(+D.f); break;
     case 'sus': showSuspect(+D.s); break;
-    case 'start': if(D.m==='h') startHuman(); else startAI(); break;
+    case 'start': if(det().type==='h') startHuman(); else startAI(); break;
     case 'quit': stopTimer(); tmp.inv=null; showSuspect(tmp.s); break;
     case 'clue': { const v=tmp.inv, d=det(); if(d.hClue!==Infinity&&v.used>=d.hClue) return; v.clues[v.i]=true; v.used++; v.time=Math.max(1,v.time-d.hCost); renderHuman(); break; }
     case 'judge': { const v=tmp.inv; if(!v||v.mode!=='h') return; v.ans[v.i]=+D.v; v.i++; if(v.i>=5) finish(); else renderHuman(); break; }
