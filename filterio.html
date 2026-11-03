@@ -360,6 +360,22 @@ button:focus-visible,textarea:focus-visible{outline:2px solid var(--fg);outline-
 @keyframes turn{0%,25%{transform:rotate(0)}55%,100%{transform:rotate(-90deg)}}
 @media (orientation:portrait){#rotate{display:flex}#stage{visibility:hidden}}
 @media (orientation:portrait) and (prefers-reduced-motion:reduce){#rotate .phone{animation:none;transform:rotate(-90deg)}}
+.brief{position:absolute;inset:0;z-index:35;background:rgba(7,12,18,.9);display:grid;place-items:center;animation:fade .2s ease}
+.bpanel{width:640px;padding:22px 30px 18px;background:var(--bg2);border:1px solid var(--line2);border-top:4px solid var(--red);display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.bpanel.h{border-top-color:var(--human)} .bpanel.a{border-top-color:var(--ai)}
+.btxt{font-family:var(--display);font-size:25px;line-height:1.4;color:var(--fg);text-wrap:balance}
+.bsub{font-size:13px;color:var(--fg2)}
+.bcount{font-family:var(--cond);font-weight:700;font-size:84px;line-height:1;margin-top:6px;color:var(--fg);font-variant-numeric:tabular-nums}
+.bcount.go{font-family:var(--display);font-size:56px;color:var(--red);padding:8px 0 14px}
+.bcount.pop{animation:pop .45s var(--ease)}
+@keyframes pop{from{transform:scale(1.6);opacity:0}to{transform:scale(1);opacity:1}}
+#coach{position:absolute;inset:0;z-index:25;pointer-events:none}
+#coach .ring{position:absolute;border:3px solid var(--red);box-shadow:0 0 0 9999px rgba(7,12,18,.55);animation:ring 1.2s ease-in-out infinite}
+@keyframes ring{50%{border-color:var(--fg)}}
+#coach .tip{position:absolute;width:320px;padding:10px 14px;background:var(--fg);color:var(--bg);font-size:14.5px;font-weight:700;line-height:1.5;border-left:4px solid var(--red)}
+#coach .tip .lbl{display:block;margin-bottom:2px}
+#tutbar{position:absolute;right:206px;top:8px;z-index:45;display:flex;align-items:center;gap:10px;padding:2px 3px 2px 10px;background:var(--bg2);border:1px solid var(--line2)}
+@media (prefers-reduced-motion:reduce){#coach .ring{animation:none}.bcount.pop{animation:none}}
 </style>
 
 <div id="root"><div id="rotate" role="alert"><div class="phone"></div><b>가로 화면으로 돌려 주세요</b><span>이 게임은 가로 화면에서만 할 수 있어요.</span></div><div id="stage" role="application" aria-label="필터 마을 사이버수사대 게임">
@@ -581,7 +597,7 @@ const FIELD_CARD_IDS=Object.keys(CARDS).filter(id=>!id.startsWith('b-'));
 
 /* ---------- 저장 ---------- */
 const KEY='filter-village-v2';
-const fresh=()=>({det:null,res:{},cards:{},stats:{},stance:'',picks:{pro:[],con:[]},reason:'',intro:{},endSeen:{}});
+const fresh=()=>({det:null,res:{},cards:{},stats:{},stance:'',picks:{pro:[],con:[]},reason:'',intro:{},endSeen:{},tutDone:false});
 let S=fresh();
 try{ const r=JSON.parse(localStorage.getItem(KEY)||'null'); if(r&&typeof r==='object') S=Object.assign(fresh(),r); }catch(e){}
 function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
@@ -617,7 +633,7 @@ const me=(...t)=>t.map(x=>({name:det().name,face:detFace(),text:x}));
 
 /* ---------- 타이틀 ---------- */
 function showTitle(){
-  stopTimer(); over.innerHTML=''; setBg(IMG.office,'soft');
+  stopTimer(); over.innerHTML=''; clearCoach(); const tb=document.getElementById('tutbar'); if(tb) tb.remove(); setBg(IMG.office,'soft');
   const started=!!S.det;
   const tiles=META.flatMap((F,fi)=>F.sus.map((s,si)=>`<span data-n="${s.id}"><img src="${IMG.face[fi*3+si]}" alt=""></span>`));
   render(`<div class="title">
@@ -627,7 +643,7 @@ function showTitle(){
       <div class="slash enter" style="--i:2"></div>
       <div class="motion enter" style="--i:3"><span class="lbl">논제</span>${esc(MOTION)}</div>
       <div class="actrow enter" style="--i:4">${started?`<button class="btn" data-act="hq">이어서 수사하기</button><button class="btn ghost" data-act="select">수사관 다시 고르기</button>`:`<button class="btn" data-act="select">수사 시작</button>`}</div>
-      <div class="note enter" style="--i:5">이름·학번을 묻지 않아요. 기록은 이 기기의 브라우저에만 저장돼요.${started?` <button class="linkbtn" data-act="reset">기록 지우고 처음부터</button>`:''}</div>
+      <div class="note enter" style="--i:5">이름·학번을 묻지 않아요. 기록은 이 기기의 브라우저에만 저장돼요.${started?` <button class="linkbtn" data-act="tutagain">튜토리얼 다시 보기</button> · <button class="linkbtn" data-act="reset">기록 지우고 처음부터</button>`:''}</div>
     </div>
     <div class="lineup enter" style="--i:3">${tiles.join('')}<div class="cap"><span class="lbl">Suspects 24</span><span class="lbl">Sectors 08</span></div></div>
   </div>`);
@@ -678,8 +694,10 @@ function showHQ(){
       <span class="faces">${F.sus.map((s,si)=>`<span class="${r[si]==='ok'?'solved':''}" title="${esc(s.name)}"><img src="${IMG.face[fi*3+si]}" alt=""></span>`).join('')}</span>
       <span class="pips one"><i class="${k[0]} ${got?'on':''}">${got?'✓ ':''}${KIND[k]} 카드</i></span></button>`;}).join('')}</div>`);
   if(!S.intro[S.det]){ S.intro[S.det]=true; save();
-    say([...chief('어서 와. 이번 주에 용의자 24명이 들어왔어.','시의회가 "AI 수사를 의무로 하자"는 조례를 표결하는데, 네 수사 결과가 근거가 될 거야.',`넌 ${modeLbl(d.type)} 담당이야. 분야마다 용의자 한 명을 잡으면 그 분야의 "${KIND[k]}" 카드를 받는다.`,'데이터 5개 중 4개 이상 맞혀야 사건 종결이다.'),...me(...d.L.start)]);
+    say([...chief('어서 와. 이번 주에 용의자 24명이 들어왔어.','시의회가 "AI 수사를 의무로 하자"는 조례를 표결하는데, 네 수사 결과가 근거가 될 거야.',`넌 ${modeLbl(d.type)} 담당이야. 분야마다 용의자 한 명을 잡으면 그 분야의 "${KIND[k]}" 카드를 받는다.`,'데이터 5개 중 4개 이상 맞혀야 사건 종결이다.'),...me(...d.L.start)],()=>{ if(tutOn()) coach('hq'); });
   }
+  else if(tutOn()) coach('hq');
+  tutBar();
 }
 
 /* ---------- 분야 ---------- */
@@ -692,6 +710,7 @@ function showField(fi){
       <div class="mug"><img src="${IMG.mug[fi*3+si]}" alt="${esc(s.name)}"><span class="cid">${s.id}</span></div>
       <div class="info"><span class="nm">${esc(s.name)}</span><span class="meta">${esc(s.sub)}</span><span class="chg"><span>혐의</span>${esc(s.charge)}</span>
       <span class="badges">${r[si]==='ok'?`<span class="tag ${d.type}">사건 종결</span>`:r[si]==='fail'?'<span class="tag no">재조사 필요</span>':'<span class="tag">미조사</span>'}</span></div></button>`).join('')}</div>`);
+  if(tutOn()) coach('field');
 }
 
 /* ---------- 용의자 ---------- */
@@ -710,13 +729,80 @@ function showSuspect(si){
         <ul>${rules.map(x=>`<li>${x}</li>`).join('')}</ul>
         <div class="rw">성공 보상 · ${cardKindLbl(k)} ${got?'<span class="got">✓ 이미 받음</span>':''}<span class="spacer"></span><button class="btn ${d.type==='h'?'human':'ai'}" data-act="start">수사 시작</button></div></div>
     </div></div>`);
+  if(tutOn()) coach('sus');
 }
+/* ---------- 미션 안내 + 카운트다운 ---------- */
+function briefing(mode,done){
+  tutBar();
+  const s=META[tmp.f].sus[tmp.s];
+  const txt=mode==='h'
+    ?`증거 5개가 '${s.charge}'에 해당하는지 하나씩 보고, 문제 있음 또는 문제 없음을 골라!`
+    :`AI가 판정한 증거 5개를 확인하고, AI가 틀린 것은 뒤집어서 제출해!`;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  over.innerHTML=`<div class="brief"><div class="bpanel ${mode}"><span class="lbl r">Mission · ${esc(s.name)}</span><div class="btxt">${esc(txt)}</div><div class="bsub">5개 중 4개 이상 맞히면 사건 종결</div><div class="bcount" id="bcount" aria-live="assertive">3</div></div></div>`;
+  let n=3; const el=()=>document.getElementById('bcount');
+  const tick=()=>{ const c=el(); if(!c) return; n--;
+    if(n>0){ c.textContent=n; c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); setTimeout(tick,900); }
+    else if(n===0){ c.textContent='시작!'; c.classList.add('go'); c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); setTimeout(tick,550); }
+    else { over.innerHTML=''; done&&done(); } };
+  setTimeout(()=>{ const c=el(); if(c&&!reduce) c.classList.add('pop'); },20);
+  setTimeout(tick,1300);
+}
+
+/* ---------- 튜토리얼 ---------- */
+const TUT={
+ hq:{sel:'[data-act=field][data-f="0"]',text:'먼저 01 뉴스를 눌러 봐. 가짜뉴스 사건이 들어와 있어.'},
+ field:{sel:'[data-act=sus][data-s="0"]',text:'"가짜 속보 유포" 혐의로 들어온 정하늘부터 조사하자. 카드를 눌러.'},
+ sus:{sel:'[data-act=start]',text:'혐의와 진술을 읽어 봐. 준비되면 "수사 시작"을 눌러.'}
+};
+function tutOn(){ return !!(tmp.tut&&!S.tutDone); }
+function tutBar(){
+  let bar=document.getElementById('tutbar');
+  if(!tutOn()){ if(bar) bar.remove(); clearCoach(); return; }
+  if(!bar){ bar=document.createElement('div'); bar.id='tutbar'; bar.innerHTML=`<span class="lbl r">Tutorial</span><button class="btn sm ghost" data-act="skiptut">튜토리얼 건너뛰기</button>`; stage.appendChild(bar); }
+  bar.style.right=view.querySelector('.counter')?'206px':'18px';
+}
+function clearCoach(){ const c=document.getElementById('coach'); if(c) c.remove(); }
+function coach(step){
+  clearCoach(); if(!tutOn()) return; tmp.tut.step=step; tutBar();
+  const T=TUT[step]; if(!T) return;
+  setTimeout(()=>{
+    if(!tutOn()||tmp.tut.step!==step) return;
+    const el=view.querySelector(T.sel); if(!el) return;
+    const sr=stage.getBoundingClientRect(), r=el.getBoundingClientRect();
+    const x=(r.left-sr.left)/SCALE, y=(r.top-sr.top)/SCALE, w=r.width/SCALE, h=r.height/SCALE;
+    const H=stage.offsetHeight; const below=y+h+120<H;
+    const c=document.createElement('div'); c.id='coach';
+    const bx=Math.max(16,Math.min(960-336,x+w/2-160));
+    c.innerHTML=`<div class="ring" style="left:${x-5}px;top:${y-5}px;width:${w+10}px;height:${h+10}px"></div><div class="tip ${below?'b':'t'}" style="left:${bx}px;${below?`top:${y+h+16}px`:`top:${y-16}px;transform:translateY(-100%)`}"><span class="lbl r">다음 할 일</span>${esc(T.text)}</div>`;
+    stage.appendChild(c);
+  },420);
+}
+function tutAllowed(b){
+  if(!tutOn()) return true;
+  const a=b.dataset.act;
+  if(['next','skiptut','notes','closenotes','ntab','pick','stance','copy','clue','judge','aset','aclue','submitai','retry','award','afteraward'].includes(a)) return true;
+  const T=TUT[tmp.tut.step]; if(!T) return true;
+  return b.matches(T.sel);
+}
+function startTutorial(){ S.tutDone=false; save(); tmp.tut={step:'hq'}; }
+function endTutorial(msg){
+  S.tutDone=true; save(); tmp.tut=null; tutBar(); clearCoach();
+  if(msg) say(chief(...msg));
+}
+const TUT_PLAY={
+ h:['위에 보이는 게 증거야. 이 글이 정말 혐의에 해당하는지 판단해.','애매하면 "단서 보기"를 눌러. 대신 남은 시간이 조금 줄어.','판단이 서면 "문제 있음" 또는 "문제 없음"을 눌러. 5개를 다 판정하면 결과가 나와. 시간은 지금부터 흐른다!'],
+ a:['AI가 증거 5개를 벌써 판정했어. 오른쪽에 색칠된 버튼이 AI가 고른 답이야.','AI도 틀릴 수 있어. 확신도나 근거, 단서를 보고 이상하면 반대 버튼을 눌러 뒤집어.','다 확인했으면 오른쪽 아래 "판정 제출"을 눌러.']
+};
+
 /* ---------- 직접 조사 ---------- */
 function startHuman(){
-  const d=det(); const fi=tmp.f, si=tmp.s;
+  const d=det(); const fi=tmp.f, si=tmp.s; stopTimer(); clearCoach();
   tmp.inv={mode:'h',fi,si,i:0,ans:[null,null,null,null,null],clues:{},used:0,time:d.hTime,timeout:false};
   renderHuman();
-  stopTimer(); timerId=setInterval(()=>{ const v=tmp.inv; if(!v||v.mode!=='h') return stopTimer(); v.time--; if(v.time<=0){ v.time=0; v.timeout=true; stopTimer(); finish(); return; } const t=document.getElementById('timer'); if(t){ t.querySelector('b').textContent=clockTxt(v.time); t.classList.toggle('low',v.time<=10); } },1000);
+  briefing('h',()=>{ if(tutOn()) say(chief(...TUT_PLAY.h),startClock); else startClock(); });
+}
+function startClock(){ stopTimer(); if(!tmp.inv||tmp.inv.mode!=='h') return; timerId=setInterval(()=>{ const v=tmp.inv; if(!v||v.mode!=='h') return stopTimer(); v.time--; if(v.time<=0){ v.time=0; v.timeout=true; stopTimer(); finish(); return; } const t=document.getElementById('timer'); if(t){ t.querySelector('b').textContent=clockTxt(v.time); t.classList.toggle('low',v.time<=10); } },1000);
 }
 const clockTxt=s=>`${Math.floor(s/60)}:${pad2(s%60)}`;
 function renderHuman(){
@@ -740,12 +826,16 @@ function renderHuman(){
 
 /* ---------- AI 조사 ---------- */
 function startAI(){
-  const fi=tmp.f, si=tmp.s; const items=ITEMS[fi*3+si];
-  tmp.inv={mode:'a',fi,si,ans:items.map(it=>it.v),clues:{},used:0,phase:'scan'};
+  const fi=tmp.f, si=tmp.s; const items=ITEMS[fi*3+si]; stopTimer(); clearCoach();
+  tmp.inv={mode:'a',fi,si,ans:items.map(it=>it.v),clues:{},used:0,phase:'brief'};
   setBg(IMG.bg[fi],'dim');
-  render(`<div class="topbar">${whoHTML(' <span class="tag a">AI 조사</span>')}</div>
+  render(`<div class="topbar">${whoHTML(' <span class="tag a">AI 조사</span>')}</div>`);
+  briefing('a',()=>{
+    if(!tmp.inv) return; tmp.inv.phase='scan';
+    render(`<div class="topbar">${whoHTML(' <span class="tag a">AI 조사</span>')}</div>
    <div class="aiwrap"><div class="panel a scan enter"><span class="lbl">AI Scan</span><div class="disp" style="font-size:26px">AI 분석 중</div><div class="bar"><i></i></div><div class="st">데이터 5건 · 작성 기록 · 이미지 · 링크 확인 중</div></div></div>`);
-  setTimeout(()=>{ if(tmp.inv&&tmp.inv.phase==='scan'){ tmp.inv.phase='review'; renderAI(); } }, matchMedia('(prefers-reduced-motion: reduce)').matches?300:1600);
+    setTimeout(()=>{ if(tmp.inv&&tmp.inv.phase==='scan'){ tmp.inv.phase='review'; renderAI(); if(tutOn()) say(chief(...TUT_PLAY.a)); } }, matchMedia('(prefers-reduced-motion: reduce)').matches?300:1600);
+  });
 }
 function renderAI(){
   const v=tmp.inv, d=det(), items=ITEMS[v.fi*3+v.si], s=META[v.fi].sus[v.si];
@@ -784,6 +874,7 @@ function finish(){
   else if(v.timeout) lines=[...me(d.L.time),...chief('시간 초과. 그사이 같은 글이 300개 더 퍼졌어. 다시 조사해!')];
   else if(keptAll) lines=[...chief('AI가 틀린 걸 그대로 도장 찍었구나. 확정 버튼을 누른 건 너야.'),...me(d.L.fail)];
   else lines=[...chief('증거가 부족해. 이대로면 무고한 사람이 벌을 받거나, 범인이 풀려나. 다시 조사해!'),...me(d.L.fail)];
+  if(tutOn()) lines=[...lines,...chief(ok?'잘했어! 4개 이상 맞혀서 사건 종결이야. "카드 받기"를 눌러 첫 카드를 받아.':'3개 이하면 게임오버야. 틀린 증거의 해설을 읽고 "다시 조사"를 눌러 다시 해 봐.')];
   setTimeout(()=>say(lines),700);
 }
 function renderResult(){
@@ -800,7 +891,7 @@ function showAward(){
 }
 function afterAward(){
   over.innerHTML='';
-  if(myCount()===8&&!S.endSeen[S.det]){ S.endSeen[S.det]=true; save(); showEnding(); } else showField(tmp.inv.fi);
+  if(myCount()===8&&!S.endSeen[S.det]){ S.endSeen[S.det]=true; save(); showEnding(); } else { showField(tmp.inv.fi); if(tutOn()) endTutorial(['튜토리얼 끝! 이제 다른 분야도 자유롭게 수사해.','분야마다 용의자 한 명을 잡으면 카드를 받아. 모은 카드는 위쪽 "수사 노트"에서 볼 수 있어.']); }
 }
 
 /* ---------- 카드 · 수사 노트 ---------- */
@@ -853,13 +944,16 @@ function showEnding(){
 /* ---------- 이벤트 ---------- */
 stage.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]'); if(!b||b.disabled) return;
+  if(!tutAllowed(b)){ toast('튜토리얼: 빨간 테두리를 눌러 줘'); return; }
   const a=b.dataset.act, D=b.dataset;
   switch(a){
     case 'next': tmp.next&&tmp.next(); break;
+    case 'skiptut': endTutorial(['튜토리얼을 건너뛰었어. 원하는 분야부터 자유롭게 수사해.']); break;
+    case 'tutagain': if(!S.det){ showSelect(); return; } startTutorial(); showHQ(); break;
     case 'title': showTitle(); break;
     case 'select': tmp.pick=null; showSelect(); break;
     case 'pickdet': tmp.pick=D.k; showSelect(); break;
-    case 'confirmdet': if(!tmp.pick) return; if(S.det&&S.det!==tmp.pick){ delete S.cards['b-'+S.det]; } S.det=tmp.pick; S.cards['b-'+S.det]=true; ['pro','con'].forEach(sd=>S.picks[sd]=S.picks[sd].filter(id=>!id.startsWith('b-')||id==='b-'+S.det)); save(); showHQ(); break;
+    case 'confirmdet': if(!tmp.pick) return; if(S.det&&S.det!==tmp.pick){ delete S.cards['b-'+S.det]; } S.det=tmp.pick; S.cards['b-'+S.det]=true; ['pro','con'].forEach(sd=>S.picks[sd]=S.picks[sd].filter(id=>!id.startsWith('b-')||id==='b-'+S.det)); save(); if(!S.tutDone) tmp.tut={step:'hq'}; showHQ(); break;
     case 'hq': if(!S.det){ showSelect(); return; } showHQ(); break;
     case 'reset': if(tmp.confirmReset){ S=fresh(); save(); tmp={}; showTitle(); toast('기록을 모두 지웠어'); } else { tmp.confirmReset=true; b.textContent='한 번 더 누르면 모든 기록이 지워져요'; setTimeout(()=>{tmp.confirmReset=false;},4000); } break;
     case 'field': showField(+D.f); break;
