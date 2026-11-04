@@ -191,6 +191,87 @@
   .ev-row:last-child { border-bottom: none; }
   .ev-counts { color: var(--muted); font-variant-numeric: tabular-nums; }
 
+  .msg.ok { background: var(--ok); border: var(--line); padding: 8px 12px; }
+  .small { font-size: .875rem; }
+  select { width: 100%; font: inherit; color: var(--ink); border: var(--line); border-radius: 0; padding: 10px 12px;
+    background: var(--field); cursor: pointer; }
+  select:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+  /* ----- 모드 탭 ----- */
+  .modes { display: flex; gap: 10px; margin-top: 26px; }
+  .modes button { flex: 1; max-width: 200px; font-weight: 500; }
+  .modes button[aria-selected="true"] { background: var(--ink); color: var(--surface); font-weight: 600; }
+
+  /* ----- 저장한 모델 목록 (1단계) ----- */
+  .saved { margin-top: 28px; padding-top: 20px; border-top: 1.5px dashed var(--ink); }
+  .saved h3 { font-size: 1rem; font-weight: 600; margin: 0 0 10px; }
+  .saved-list { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+  .saved-item { display: flex; align-items: center; gap: 8px; border: var(--line); padding: 8px 10px; background: var(--field); }
+  .saved-item .info { flex: 1; min-width: 0; }
+  .saved-item .info b { font-weight: 600; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .saved-item .info span { font-size: .8125rem; color: var(--muted); }
+  .saved-item button { padding: 4px 10px; font-weight: 500; box-shadow: none; }
+  .save-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+
+  /* ----- 캐릭터 설정 ----- */
+  .panel { background: var(--surface); border: var(--line); box-shadow: var(--shadow-lg); padding: 28px 28px 32px;
+    margin-top: 24px; animation: enter .32s var(--ease-out) both; }
+  .panel[hidden] { display: none; }
+  .block { padding: 20px 0; border-top: 1.5px dashed var(--ink); }
+  .block:first-of-type { border-top: none; padding-top: 4px; }
+  .block-title { font-size: 1.05rem; font-weight: 600; margin: 0 0 12px; }
+  .char-row { display: grid; grid-template-columns: 128px 1fr; gap: 20px; align-items: start; }
+  .avatar { width: 128px; height: 128px; display: grid; place-items: center; border: var(--line); background: var(--accent);
+    box-shadow: var(--shadow-sm); overflow: hidden; font-size: 4rem; line-height: 1; }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .avatar.sm { width: 34px; height: 34px; font-size: 1.25rem; box-shadow: none; border-width: 1.5px; flex: none; }
+  .emoji-grid { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 12px; }
+  .emoji-opt { width: 42px; height: 42px; padding: 0; font-size: 1.4rem; box-shadow: none; font-weight: 400; }
+  .emoji-opt[aria-checked="true"] { background: var(--accent); box-shadow: var(--shadow-sm); transform: translate(-1px, -1px); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .model-classes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .empty { border: 1.5px dashed var(--ink); padding: 14px 16px; background: var(--field); }
+  .empty p { margin: 0 0 10px; }
+  .rules { display: grid; gap: 12px; margin-bottom: 12px; }
+  .rule { --cc: var(--surface); border: var(--line); background: var(--surface); }
+  .rule-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 10px;
+    background: var(--cc); border-bottom: var(--line); font-weight: 600; font-size: .9375rem; }
+  .rule-head button { padding: 2px 10px; font-weight: 500; box-shadow: none; }
+  .rule-body { padding: 12px; display: grid; gap: 10px; }
+  .rule-if { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .9375rem; }
+  .rule-if select { width: auto; min-width: 110px; padding: 6px 10px; }
+  .rule-then { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center; font-size: .9375rem; }
+
+  /* ----- 캐릭터 체험 ----- */
+  .pipeline { list-style: none; padding: 0; margin: 0 0 22px; display: flex; align-items: center; gap: 0; }
+  .pipeline li { flex: 1; text-align: center; padding: 6px 4px; border: var(--line); background: var(--surface);
+    font-size: .875rem; font-weight: 500; white-space: nowrap; transition: background-color .2s ease, color .2s ease; }
+  .pipeline li + li { border-left: none; }
+  .pipeline li.on { background: var(--accent); font-weight: 600; }
+  .pipeline li.done { background: var(--ink); color: var(--surface); }
+  .stage { display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: center; margin-bottom: 14px; }
+  .stage .avatar { width: 150px; height: 150px; font-size: 5rem; }
+  .avatar.hop { animation: hop .45s var(--ease-out); }
+  @keyframes hop { 30% { transform: translateY(-10px) rotate(-3deg); } 60% { transform: translateY(0) rotate(2deg); } }
+  .bubble { position: relative; border: var(--line); background: var(--surface); padding: 16px 18px; min-height: 84px;
+    font-size: 1.125rem; box-shadow: var(--shadow-sm); overflow-wrap: anywhere; }
+  .bubble::before { content: ''; position: absolute; left: -12px; top: 28px; width: 20px; height: 20px; background: var(--surface);
+    border-left: var(--line); border-bottom: var(--line); transform: rotate(45deg); }
+  .bubble.pop { animation: drop .3s var(--ease-out) both; }
+  .dots { display: inline-flex; gap: 5px; }
+  .dots i { width: 8px; height: 8px; background: var(--ink); animation: blink 1s infinite; }
+  .dots i:nth-child(2) { animation-delay: .15s; } .dots i:nth-child(3) { animation-delay: .3s; }
+  @keyframes blink { 50% { opacity: .2; } }
+  .cls-line { min-height: 30px; margin: 0 0 18px; font-size: .9375rem; color: var(--muted); }
+  .cls-line .tk { color: var(--ink); font-weight: 500; }
+  .log-title { font-size: 1rem; font-weight: 600; margin: 28px 0 10px; }
+  .log { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  .log li { border: 1.5px solid var(--ink); padding: 10px 12px; background: var(--field); display: grid; gap: 6px; font-size: .9375rem; }
+  .log .me { font-weight: 500; }
+  .log .meta { font-size: .8125rem; color: var(--muted); }
+  .log .reply { display: flex; gap: 8px; align-items: center; }
+  .log-empty { color: var(--muted); font-size: .9375rem; }
+
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   @media (max-width: 520px) {
@@ -202,6 +283,13 @@
     .test-row { flex-direction: column; }
     .help-btn { right: 14px; bottom: 14px; width: 46px; height: 46px; }
     .help-body { padding: 4px 16px 24px; }
+    .panel { padding: 20px 18px 24px; box-shadow: var(--shadow); }
+    .char-row { grid-template-columns: 1fr; }
+    .stage { grid-template-columns: 1fr; justify-items: center; }
+    .stage .avatar { width: 120px; height: 120px; font-size: 4rem; }
+    .bubble { width: 100%; }
+    .bubble::before { left: 50%; top: -12px; transform: translateX(-50%) rotate(135deg); }
+    .rule-then { grid-template-columns: 1fr; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -213,9 +301,14 @@
 <main>
   <header>
     <h1>텍스트 분류 모델 만들기</h1>
-    <p>예시 문장으로 모델을 가르치고, 처음 보는 문장을 분류해 봐요.</p>
+    <p>예시 문장으로 모델을 가르치고, 그 모델로 대답하는 캐릭터를 만들어 봐요.</p>
+    <div class="modes" role="tablist" aria-label="모드">
+      <button role="tab" id="tabMake" aria-selected="true" aria-controls="makeMode">모델 만들기</button>
+      <button role="tab" id="tabPlay" aria-selected="false" aria-controls="playMode">캐릭터 체험</button>
+    </div>
   </header>
 
+  <div id="makeMode" role="tabpanel" aria-labelledby="tabMake">
   <ol class="stepper" id="stepper" aria-label="진행 단계">
     <li class="item"><div class="dot">1</div><div class="label">모델 이름</div></li>
     <li class="bar" aria-hidden="true"></li>
@@ -236,6 +329,13 @@
     <div class="nav">
       <span></span>
       <button class="btn-primary" id="toData">다음</button>
+    </div>
+    <div class="saved">
+      <h3>저장한 모델</h3>
+      <ul class="saved-list" id="savedList"></ul>
+      <button class="btn-text" id="importBtn">파일에서 모델 불러오기</button>
+      <input type="file" id="importInput" accept=".json,application/json" hidden>
+      <div class="msg" id="savedMsg" role="status"></div>
     </div>
   </section>
 
@@ -273,11 +373,96 @@
       <button class="btn-primary" id="testBtn">분류하기</button>
     </div>
     <div class="result" id="result" aria-live="polite"></div>
+    <div class="save-row">
+      <button class="btn-primary" id="saveBtn">모델 저장하기</button>
+      <button id="exportBtn">파일로 내보내기</button>
+    </div>
+    <div class="msg" id="saveMsg" role="status"></div>
     <div class="nav">
       <button class="btn-text" id="backToData">데이터 고치기</button>
       <button id="restart">처음부터</button>
     </div>
   </section>
+  </div>
+
+  <div id="playMode" role="tabpanel" aria-labelledby="tabPlay" hidden>
+    <!-- 캐릭터 설정 -->
+    <section class="panel" id="setupPanel" aria-labelledby="tSetup">
+      <h2 id="tSetup">캐릭터 만들기</h2>
+      <p class="sub">캐릭터는 내 말을 <strong>입력받고</strong>, 모델로 <strong>분류한 뒤</strong>, 정해 둔 조건에 맞게 <strong>대답해요</strong>.</p>
+
+      <div class="block">
+        <h3 class="block-title">캐릭터 모습</h3>
+        <div class="char-row">
+          <div class="avatar" id="avatarPreview"></div>
+          <div>
+            <label class="field-label" for="charName">이름</label>
+            <input type="text" id="charName" autocomplete="off" maxlength="20">
+            <span class="field-label" style="margin-top:14px" id="emojiLabel">이모지 고르기</span>
+            <div class="emoji-grid" id="emojiGrid" role="radiogroup" aria-labelledby="emojiLabel"></div>
+            <div class="row">
+              <button id="photoBtn">사진 올리기</button>
+              <button class="btn-text" id="photoClear" hidden>사진 지우고 이모지 쓰기</button>
+              <input type="file" id="photoInput" accept="image/*" hidden>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h3 class="block-title">분류에 쓸 모델</h3>
+        <div id="modelPick">
+          <label class="field-label" for="modelSelect">저장한 모델 중에서 고르기</label>
+          <select id="modelSelect"></select>
+          <div class="model-classes" id="modelClasses"></div>
+        </div>
+        <div class="empty" id="noModel" hidden>
+          <p>아직 저장한 모델이 없어요. 모델을 학습시킨 뒤 테스트 화면에서 <b>모델 저장하기</b>를 눌러 주세요.</p>
+          <button id="goMake">모델 만들러 가기</button>
+        </div>
+      </div>
+
+      <div class="block">
+        <h3 class="block-title">조건과 대답</h3>
+        <p class="sub small" style="margin-bottom:14px">위에서부터 차례로 확인해서, 처음으로 맞는 조건의 대답을 해요.
+          대답에 <b>{결과}</b>나 <b>{확률}</b>을 쓰면 실제 분류 결과로 바뀌어요.</p>
+        <div class="rules" id="rules"></div>
+        <button class="btn-add" id="addRule">조건 추가</button>
+        <label class="field-label" for="fallback" style="margin-top:18px">어떤 조건에도 맞지 않을 때 대답</label>
+        <input type="text" id="fallback" autocomplete="off">
+      </div>
+
+      <div class="msg" id="setupMsg" role="alert"></div>
+      <div class="nav">
+        <span class="muted small">설정은 자동으로 저장돼요.</span>
+        <button class="btn-primary" id="startBtn">시작하기</button>
+      </div>
+    </section>
+
+    <!-- 캐릭터 체험 -->
+    <section class="panel" id="playPanel" aria-labelledby="playTitle" hidden>
+      <h2 id="playTitle" class="sr-only">캐릭터와 대화하기</h2>
+      <ol class="pipeline" id="pipeline" aria-label="처리 단계">
+        <li>입력받기</li><li>분류하기</li><li>대답하기</li>
+      </ol>
+      <div class="stage">
+        <div class="avatar" id="playAvatar"></div>
+        <div class="bubble" id="bubble" aria-live="polite"></div>
+      </div>
+      <p class="cls-line" id="clsLine"></p>
+      <label class="field-label" for="talkInput">캐릭터에게 할 말</label>
+      <div class="test-row">
+        <input type="text" id="talkInput" placeholder="예: 오늘 친구랑 놀아서 신났어" autocomplete="off">
+        <button class="btn-primary" id="talkBtn">말하기</button>
+      </div>
+      <h3 class="log-title">대화 기록</h3>
+      <ol class="log" id="log"></ol>
+      <div class="nav">
+        <button class="btn-text" id="editChar">캐릭터 설정 바꾸기</button>
+        <button id="clearLog">대화 지우기</button>
+      </div>
+    </section>
+  </div>
 </main>
 
 <button class="help-btn" id="helpBtn" aria-label="도움말: 사용 방법과 인공지능 작동 원리" aria-haspopup="dialog">?</button>
@@ -299,6 +484,19 @@
         <p>컴퓨터가 예시 문장을 조각으로 나누고, 어떤 조각이 어느 클래스에 몇 번 나왔는지 세어 기억해요.</p></div></li>
       <li><span class="num">4</span><div><b>테스트하기</b>
         <p>처음 보는 문장을 넣으면, 세어 둔 개수를 바탕으로 클래스별 확률을 계산해 가장 높은 것을 골라요.</p></div></li>
+    </ol>
+
+    <h3>캐릭터 체험</h3>
+    <ol class="how">
+      <li><span class="num">1</span><div><b>모델 저장하기</b>
+        <p>테스트 화면에서 모델 저장하기를 누르면 이 컴퓨터의 브라우저에 저장돼요. 다른 컴퓨터로 옮기려면 파일로 내보내기를 쓰세요.</p></div></li>
+      <li><span class="num">2</span><div><b>캐릭터 꾸미기</b>
+        <p>이모지를 고르거나 사진을 올리고, 분류에 쓸 모델을 정해요.</p></div></li>
+      <li><span class="num">3</span><div><b>조건과 대답 정하기</b>
+        <p>"분류 결과가 긍정이고 확률이 70% 이상이면 이렇게 대답해"처럼 조건을 원하는 만큼 만들어요.</p></div></li>
+      <li><span class="num">4</span><div><b>시작하기</b>
+        <p>캐릭터가 말을 <b>입력받고</b>, 모델로 <b>분류하고</b>, 맞는 조건을 찾아 <b>대답해요</b>.
+          분류는 인공지능이 하고, 대답은 우리가 정한 규칙대로 해요.</p></div></li>
     </ol>
 
     <h3>인공지능이 판단하는 과정</h3>
@@ -461,6 +659,7 @@ function tokenize(text) {
 }
 
 let model = null;
+let currentDataset = null; // 저장할 때 쓰는 학습 데이터 (모델은 불러올 때 다시 학습한다)
 
 function train(dataset) {
   const vocab = new Set();
@@ -535,6 +734,7 @@ document.getElementById('trainBtn').addEventListener('click', () => {
   if (error) { focusEl.focus(); return showError(trainMsg, error); }
 
   trainMsg.textContent = '';
+  currentDataset = dataset;
   model = train(dataset);
   go(3);
   playTraining(dataset);
@@ -686,6 +886,408 @@ let pressedBackdrop = false;
 help.addEventListener('pointerdown', e => { pressedBackdrop = e.target === help; });
 help.addEventListener('click', e => { if (pressedBackdrop && e.target === help) help.close(); });
 
+// ----- 저장소 (브라우저 localStorage) -----
+// 저장이 막힌 브라우저(시크릿 창, 일부 학교 PC 설정)에서는 창을 닫기 전까지만 메모리에 보관한다
+const store = (() => {
+  const mem = {};
+  let persistent = true;
+  try { localStorage.setItem('tc-test', '1'); localStorage.removeItem('tc-test'); } catch { persistent = false; }
+  return {
+    persistent,
+    get(key, fallback) {
+      try { return JSON.parse(persistent ? localStorage.getItem(key) : mem[key]) ?? fallback; } catch { return fallback; }
+    },
+    set(key, value) {
+      const s = JSON.stringify(value);
+      if (!persistent) { mem[key] = s; return true; }
+      try { localStorage.setItem(key, s); return true; } catch { return false; }
+    },
+  };
+})();
+const NOT_PERSISTENT = ' 다만 이 브라우저는 저장이 막혀 있어서 창을 닫으면 사라져요. 파일로 내보내기로 따로 보관하세요.';
+const MODELS_KEY = 'tc-models';
+const CHAR_KEY = 'tc-character';
+
+function getModels() { return store.get(MODELS_KEY, []); }
+function setModels(list) { return store.set(MODELS_KEY, list); }
+
+function showMsg(el, text, ok = true) {
+  el.textContent = text;
+  el.className = 'msg ' + (ok ? 'ok' : 'err');
+}
+
+// 같은 이름이 있으면 새 내용으로 바꾼다
+function saveModel(name, classes) {
+  const list = getModels();
+  const old = list.find(m => m.name === name);
+  const entry = { id: old ? old.id : Date.now().toString(36), name, classes, savedAt: Date.now() };
+  const next = old ? list.map(m => (m.id === old.id ? entry : m)) : [...list, entry];
+  return setModels(next) ? (old ? 'updated' : 'added') : null;
+}
+
+const saveMsg = document.getElementById('saveMsg');
+document.getElementById('saveBtn').addEventListener('click', () => {
+  const name = modelNameEl.value.trim();
+  const result = saveModel(name, currentDataset);
+  if (!result) return showMsg(saveMsg, '저장하지 못했어요. 브라우저 저장 공간을 확인해 주세요.', false);
+  showMsg(saveMsg, (result === 'updated'
+    ? `'${name}'을(를) 새 내용으로 저장했어요. 캐릭터 체험에서 쓸 수 있어요.`
+    : `'${name}'을(를) 저장했어요. 캐릭터 체험에서 쓸 수 있어요.`) + (store.persistent ? '' : NOT_PERSISTENT));
+  renderSaved();
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const name = modelNameEl.value.trim();
+  const data = JSON.stringify({ type: 'text-classifier-model', name, classes: currentDataset }, null, 2);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+  a.download = `${name}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  showMsg(saveMsg, `'${name}.json' 파일로 내보냈어요. 다른 컴퓨터의 1단계에서 불러올 수 있어요.`);
+});
+
+// 1단계: 저장한 모델 목록
+const savedList = document.getElementById('savedList');
+const savedMsg = document.getElementById('savedMsg');
+
+function loadIntoEditor(m) {
+  modelNameEl.value = m.name;
+  classesEl.innerHTML = '';
+  m.classes.forEach(c => addClass(c.label, c.texts.join(', ')));
+  go(2);
+}
+
+function renderSaved() {
+  const list = getModels();
+  if (!list.length) {
+    savedList.innerHTML = '<li class="muted small">아직 저장한 모델이 없어요. 학습을 마친 뒤 테스트 화면에서 저장할 수 있어요.</li>';
+    return;
+  }
+  savedList.innerHTML = '';
+  for (const m of list) {
+    const li = document.createElement('li');
+    li.className = 'saved-item';
+    li.innerHTML = `<div class="info"><b></b><span></span></div>
+      <button data-act="load">불러오기</button><button data-act="del" class="btn-text">삭제</button>`;
+    li.querySelector('b').textContent = m.name;
+    li.querySelector('span').textContent =
+      `클래스 ${m.classes.length}개: ${m.classes.map(c => c.label).join(', ')}`;
+    li.querySelector('[data-act=load]').addEventListener('click', () => loadIntoEditor(m));
+    li.querySelector('[data-act=del]').addEventListener('click', () => {
+      if (!confirm(`'${m.name}' 모델을 삭제할까요? 되돌릴 수 없어요.`)) return;
+      setModels(getModels().filter(x => x.id !== m.id));
+      renderSaved();
+    });
+    savedList.appendChild(li);
+  }
+}
+
+const importInput = document.getElementById('importInput');
+document.getElementById('importBtn').addEventListener('click', () => importInput.click());
+importInput.addEventListener('change', async () => {
+  const file = importInput.files[0];
+  importInput.value = '';
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    const ok = data && typeof data.name === 'string' && Array.isArray(data.classes) && data.classes.length >= 2 &&
+      data.classes.every(c => typeof c.label === 'string' && Array.isArray(c.texts));
+    if (!ok) throw new Error('format');
+    saveModel(data.name, data.classes);
+    renderSaved();
+    showMsg(savedMsg, `'${data.name}' 모델을 불러와 저장했어요. 불러오기를 누르면 데이터를 고치고 다시 학습할 수 있어요.`);
+  } catch {
+    showMsg(savedMsg, '이 파일은 모델 파일이 아니에요. "파일로 내보내기"로 만든 .json 파일을 골라 주세요.', false);
+  }
+});
+
+// ----- 모드 전환 -----
+const tabMake = document.getElementById('tabMake');
+const tabPlay = document.getElementById('tabPlay');
+const makeMode = document.getElementById('makeMode');
+const playMode = document.getElementById('playMode');
+
+function setMode(mode) {
+  const play = mode === 'play';
+  tabMake.setAttribute('aria-selected', String(!play));
+  tabPlay.setAttribute('aria-selected', String(play));
+  makeMode.hidden = play;
+  playMode.hidden = !play;
+  if (play) openSetup();
+}
+tabMake.addEventListener('click', () => setMode('make'));
+tabPlay.addEventListener('click', () => setMode('play'));
+document.getElementById('goMake').addEventListener('click', () => { setMode('make'); go(1); });
+
+// ----- 캐릭터 설정 -----
+const EMOJIS = ['🤖', '🐶', '🐱', '🐰', '🦊', '🐻', '🐼', '🐧', '🐸', '🦄', '👻', '🐢'];
+const THRESHOLDS = [0, 50, 70, 90];
+const charDefault = { name: '로보', emoji: '🤖', photo: null, modelId: null, rules: [], fallback: '음... 잘 모르겠어. 다르게 말해 줄래?' };
+let char = { ...charDefault, ...store.get(CHAR_KEY, {}) };
+
+const avatarPreview = document.getElementById('avatarPreview');
+const charNameEl = document.getElementById('charName');
+const emojiGrid = document.getElementById('emojiGrid');
+const photoInput = document.getElementById('photoInput');
+const photoClear = document.getElementById('photoClear');
+const modelSelect = document.getElementById('modelSelect');
+const rulesEl = document.getElementById('rules');
+const fallbackEl = document.getElementById('fallback');
+const setupMsg = document.getElementById('setupMsg');
+
+function saveChar() {
+  if (!store.set(CHAR_KEY, char)) showMsg(setupMsg, '설정을 저장하지 못했어요. 사진이 너무 크면 다른 사진을 골라 주세요.', false);
+}
+
+function renderAvatar(el) {
+  el.innerHTML = '';
+  if (char.photo) {
+    const img = document.createElement('img');
+    img.src = char.photo;
+    img.alt = `${char.name} 캐릭터 사진`;
+    el.appendChild(img);
+  } else {
+    el.textContent = char.emoji;
+    el.setAttribute('aria-label', `${char.name} 캐릭터`);
+  }
+}
+
+function renderLook() {
+  renderAvatar(avatarPreview);
+  photoClear.hidden = !char.photo;
+  emojiGrid.querySelectorAll('.emoji-opt').forEach(b =>
+    b.setAttribute('aria-checked', String(!char.photo && b.textContent === char.emoji)));
+}
+
+EMOJIS.forEach(e => {
+  const b = document.createElement('button');
+  b.className = 'emoji-opt';
+  b.setAttribute('role', 'radio');
+  b.textContent = e;
+  b.addEventListener('click', () => { char.emoji = e; char.photo = null; saveChar(); renderLook(); });
+  emojiGrid.appendChild(b);
+});
+
+charNameEl.addEventListener('input', () => { char.name = charNameEl.value.trim() || '캐릭터'; saveChar(); });
+fallbackEl.addEventListener('input', () => { char.fallback = fallbackEl.value; saveChar(); });
+
+document.getElementById('photoBtn').addEventListener('click', () => photoInput.click());
+photoClear.addEventListener('click', () => { char.photo = null; saveChar(); renderLook(); });
+
+// 사진은 가운데를 정사각형으로 잘라 256px로 줄여 저장한다 (브라우저 저장 공간 절약)
+photoInput.addEventListener('change', async () => {
+  const file = photoInput.files[0];
+  photoInput.value = '';
+  if (!file) return;
+  try {
+    const img = await createImageBitmap(file);
+    const size = Math.min(img.width, img.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 256;
+    canvas.getContext('2d').drawImage(img, (img.width - size) / 2, (img.height - size) / 2, size, size, 0, 0, 256, 256);
+    char.photo = canvas.toDataURL('image/jpeg', 0.85);
+    setupMsg.textContent = '';
+    saveChar();
+    renderLook();
+  } catch {
+    showMsg(setupMsg, '이 사진은 열 수 없어요. JPG나 PNG 사진을 골라 주세요.', false);
+  }
+});
+
+function selectedModel() {
+  return getModels().find(m => m.id === char.modelId) || null;
+}
+
+function renderModelPick() {
+  const list = getModels();
+  document.getElementById('modelPick').hidden = !list.length;
+  document.getElementById('noModel').hidden = !!list.length;
+  if (!list.find(m => m.id === char.modelId)) char.modelId = list[0] ? list[0].id : null;
+  modelSelect.innerHTML = '';
+  for (const m of list) modelSelect.add(new Option(m.name, m.id, false, m.id === char.modelId));
+  const m = selectedModel();
+  document.getElementById('modelClasses').innerHTML = m
+    ? m.classes.map((c, i) => `<span class="tk" style="--cc: var(--c${i % COLORS})">${escapeHtml(c.label)}</span>`).join('')
+    : '';
+}
+
+modelSelect.addEventListener('change', () => {
+  char.modelId = modelSelect.value;
+  saveChar();
+  renderModelPick();
+  renderRules();
+});
+
+function renderRules() {
+  const m = selectedModel();
+  const labels = m ? m.classes.map(c => c.label) : [];
+  rulesEl.innerHTML = '';
+  char.rules.forEach((r, i) => {
+    // 모델을 바꿔서 없어진 클래스는 첫 번째 클래스로 바꾼다
+    if (labels.length && !labels.includes(r.label)) r.label = labels[0];
+    const div = document.createElement('div');
+    div.className = 'rule';
+    div.style.setProperty('--cc', labels.includes(r.label) ? `var(--c${labels.indexOf(r.label) % COLORS})` : 'var(--surface)');
+    div.innerHTML = `
+      <div class="rule-head"><span>조건 ${i + 1}</span><button aria-label="조건 ${i + 1} 삭제">삭제</button></div>
+      <div class="rule-body">
+        <div class="rule-if">만약 분류 결과가 <select class="r-label" aria-label="분류 결과"></select> 이고,
+          확률이 <select class="r-min" aria-label="확률 조건"></select> 이면</div>
+        <div class="rule-then"><span>대답:</span>
+          <input type="text" class="r-answer" placeholder="예: 기분이 좋아 보여서 나도 신나!" aria-label="조건 ${i + 1}의 대답" autocomplete="off"></div>
+      </div>`;
+    const sel = div.querySelector('.r-label');
+    labels.forEach(l => sel.add(new Option(l, l, false, l === r.label)));
+    const min = div.querySelector('.r-min');
+    THRESHOLDS.forEach(t => min.add(new Option(t ? `${t}% 이상` : '상관없이', t, false, t === r.min)));
+    const ans = div.querySelector('.r-answer');
+    ans.value = r.answer;
+    sel.addEventListener('change', () => { r.label = sel.value; saveChar(); renderRules(); });
+    min.addEventListener('change', () => { r.min = +min.value; saveChar(); });
+    ans.addEventListener('input', () => { r.answer = ans.value; saveChar(); });
+    div.querySelector('.rule-head button').addEventListener('click', () => {
+      char.rules.splice(i, 1); saveChar(); renderRules();
+    });
+    rulesEl.appendChild(div);
+  });
+  saveChar();
+}
+
+document.getElementById('addRule').addEventListener('click', () => {
+  const m = selectedModel();
+  // 아직 조건이 없는 클래스를 먼저 고른다
+  const used = char.rules.map(r => r.label);
+  const label = m ? (m.classes.find(c => !used.includes(c.label)) || m.classes[0]).label : '';
+  char.rules.push({ label, min: 0, answer: '' });
+  renderRules();
+  rulesEl.lastElementChild.querySelector('.r-answer').focus();
+});
+
+function openSetup() {
+  document.getElementById('setupPanel').hidden = false;
+  document.getElementById('playPanel').hidden = true;
+  charNameEl.value = char.name;
+  fallbackEl.value = char.fallback;
+  if (!char.rules.length) char.rules.push({ label: '', min: 0, answer: '' });
+  renderLook();
+  renderModelPick();
+  renderRules();
+}
+
+// ----- 캐릭터 체험: 입력받기 → 분류하기 → 대답하기 -----
+const pipelineItems = [...document.querySelectorAll('#pipeline li')];
+const bubble = document.getElementById('bubble');
+const playAvatar = document.getElementById('playAvatar');
+const clsLine = document.getElementById('clsLine');
+const talkInput = document.getElementById('talkInput');
+const talkBtn = document.getElementById('talkBtn');
+const logEl = document.getElementById('log');
+let playModel = null;
+let busy = false;
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function setPipeline(step) { // step: 0~2 진행 중, 3 = 모두 끝
+  pipelineItems.forEach((li, i) => {
+    li.classList.toggle('on', i === step);
+    li.classList.toggle('done', i < step);
+  });
+}
+
+function say(html) {
+  bubble.innerHTML = html;
+  bubble.classList.remove('pop');
+  void bubble.offsetWidth;
+  bubble.classList.add('pop');
+}
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  const m = selectedModel();
+  const blankIdx = char.rules.findIndex(r => !r.answer.trim());
+  const [error, focusEl] =
+    !m ? ['분류에 쓸 모델이 없어요. 먼저 모델을 저장해 주세요.', document.getElementById('goMake')] :
+    !char.rules.length ? ['조건을 1개 이상 만들어 주세요.', document.getElementById('addRule')] :
+    blankIdx >= 0 ? [`조건 ${blankIdx + 1}의 대답이 비어 있어요.`, rulesEl.children[blankIdx].querySelector('.r-answer')] :
+    !char.fallback.trim() ? ['조건에 맞지 않을 때 할 대답을 적어 주세요.', fallbackEl] :
+    [null, null];
+  if (error) { focusEl.focus(); return showError(setupMsg, error); }
+  setupMsg.textContent = '';
+
+  playModel = train(m.classes);
+  document.getElementById('setupPanel').hidden = true;
+  document.getElementById('playPanel').hidden = false;
+  renderAvatar(playAvatar);
+  setPipeline(-1);
+  clsLine.textContent = `분류 모델: ${m.name}`;
+  // 이름 끝 글자에 받침이 있으면 "이야", 없으면 "야"
+  const last = char.name.charCodeAt(char.name.length - 1) - 0xAC00;
+  const iya = last >= 0 && last < 11172 && last % 28 ? '이야' : '야';
+  say(`안녕! 나는 <b>${escapeHtml(char.name)}</b>${iya}. 나한테 하고 싶은 말을 적어 줘.`);
+  logEl.innerHTML = '<li class="log-empty" style="border:none;background:none;padding:0">아직 대화가 없어요.</li>';
+  talkInput.focus();
+});
+
+async function talk() {
+  const text = talkInput.value.trim();
+  if (busy || !playModel) return;
+  if (!text) { talkInput.focus(); return; }
+  busy = true;
+  talkBtn.disabled = true;
+  talkInput.value = '';
+
+  // 1. 입력받기
+  setPipeline(0);
+  say(`<span class="muted">“${escapeHtml(text)}”</span>`);
+  await sleep(600);
+
+  // 2. 분류하기
+  setPipeline(1);
+  say('<span class="dots" aria-label="분류하는 중"><i></i><i></i><i></i></span>');
+  const top = predict(playModel, text)[0];
+  const pct = (top.prob * 100).toFixed(1);
+  await sleep(800);
+  clsLine.innerHTML = `분류 결과: <span class="tk" style="--cc: var(--c${top.color})">${escapeHtml(top.label)} ${pct}%</span>`;
+  await sleep(400);
+
+  // 3. 대답하기: 위에서부터 처음 맞는 조건
+  setPipeline(2);
+  const idx = char.rules.findIndex(r => r.label === top.label && top.prob * 100 >= r.min);
+  const answer = (idx >= 0 ? char.rules[idx].answer : char.fallback)
+    .replaceAll('{결과}', top.label).replaceAll('{확률}', pct + '%');
+  say(escapeHtml(answer));
+  playAvatar.classList.remove('hop');
+  void playAvatar.offsetWidth;
+  playAvatar.classList.add('hop');
+  await sleep(300);
+  setPipeline(3);
+
+  const empty = logEl.querySelector('.log-empty');
+  if (empty) empty.remove();
+  const li = document.createElement('li');
+  li.innerHTML = `<div class="me"></div>
+    <div class="meta">분류: <span class="tk" style="--cc: var(--c${top.color})"></span> → <span class="rule-hit"></span></div>
+    <div class="reply"><span class="avatar sm"></span><span class="ans"></span></div>`;
+  li.querySelector('.me').textContent = `나: ${text}`;
+  li.querySelector('.tk').textContent = `${top.label} ${pct}%`;
+  li.querySelector('.rule-hit').textContent = idx >= 0 ? `조건 ${idx + 1}에 맞아요` : '맞는 조건이 없어요';
+  renderAvatar(li.querySelector('.avatar'));
+  li.querySelector('.ans').textContent = answer;
+  logEl.prepend(li);
+
+  busy = false;
+  talkBtn.disabled = false;
+  talkInput.focus();
+}
+
+talkBtn.addEventListener('click', talk);
+talkInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) talk(); });
+document.getElementById('editChar').addEventListener('click', openSetup);
+document.getElementById('clearLog').addEventListener('click', () => {
+  logEl.innerHTML = '<li class="log-empty" style="border:none;background:none;padding:0">아직 대화가 없어요.</li>';
+});
+
+renderSaved();
 go(1);
 </script>
 </body>
