@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- interactive-widget: 화면 키보드가 올라오면 보이는 영역 크기에 맞춰 레이아웃을 다시 잡는다 (태블릿) -->
+<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
 <title>텍스트 분류 모델 만들기</title>
 <meta name="description" content="예시 문장으로 나만의 텍스트 분류 모델을 학습시키고 테스트하는 수업용 웹앱">
 <meta name="theme-color" content="#eef0eb">
@@ -272,6 +273,48 @@
   .log .reply { display: flex; gap: 8px; align-items: center; }
   .log-empty { color: var(--muted); font-size: .9375rem; }
 
+  /* ----- 경고 표시 ----- */
+  .rule.missing { border-style: dashed; }
+  .rule-warn, .result-warn { margin: 0; color: #b42318; font-size: .875rem; font-weight: 500; }
+  .result-warn { margin: -4px 0 12px; background: #ffe1dc; border: 1.5px solid var(--ink); padding: 6px 10px; }
+  .unknown { color: #b42318; font-weight: 500; }
+
+  /* ----- 태블릿 (터치) ----- */
+  @media (pointer: coarse) {
+    button { min-height: 44px; }
+    .btn-del, .saved-item button, .rule-head button { min-height: 40px; padding-inline: 14px; }
+    .emoji-opt { width: 48px; height: 48px; }
+    /* 16px보다 작은 입력칸은 iPad가 확대해 버려서 16px 이상으로 */
+    input[type=text], textarea, select { font-size: max(16px, 1em); }
+    /* 화면 키보드가 올라와 있을 때 ? 버튼이 "말하기" 버튼을 가리지 않게 */
+    body:has(input:focus, textarea:focus, select:focus) .help-btn { display: none; }
+  }
+
+  /* ----- 낮은 가로 화면: 16:10 태블릿 가로 + 화면 키보드 ----- */
+  @media (orientation: landscape) and (max-height: 620px) {
+    main { padding-top: 18px; }
+    header h1 { font-size: 1.35rem; }
+    header p { margin-top: 8px; font-size: .9375rem; }
+    .modes { margin-top: 12px; }
+    .modes button { padding-block: 6px; }
+    .stepper { margin: 14px 0 14px; }
+    .stepper .dot { width: 30px; height: 30px; }
+    .stepper .bar { margin-top: 13px; }
+    .screen, .panel { padding: 18px 22px 22px; }
+    .panel { margin-top: 14px; }
+    .sub { margin-bottom: 14px; }
+    .nav { margin-top: 18px; }
+    .pipeline { margin-bottom: 12px; }
+    .stage { gap: 16px; margin-bottom: 8px; }
+    .stage .avatar { width: 92px; height: 92px; font-size: 3rem; }
+    .bubble { min-height: 60px; padding: 10px 14px; font-size: 1rem; }
+    .bubble::before { top: 18px; }
+    .cls-line { margin-bottom: 8px; }
+    .char-row { grid-template-columns: 100px 1fr; }
+    .char-row .avatar { width: 100px; height: 100px; font-size: 3.2rem; }
+    .result { margin-top: 14px; padding: 12px 14px 10px; }
+  }
+
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   @media (max-width: 520px) {
@@ -429,7 +472,8 @@
         <div class="rules" id="rules"></div>
         <button class="btn-add" id="addRule">조건 추가</button>
         <label class="field-label" for="fallback" style="margin-top:18px">어떤 조건에도 맞지 않을 때 대답</label>
-        <input type="text" id="fallback" autocomplete="off">
+        <input type="text" id="fallback" autocomplete="off" aria-describedby="fallbackHint">
+        <p class="muted small" id="fallbackHint" style="margin:6px 0 0">모델이 학습한 적 없는 말만 들어와도 이 대답을 해요.</p>
       </div>
 
       <div class="msg" id="setupMsg" role="alert"></div>
@@ -676,7 +720,13 @@ function train(dataset) {
     return { label, docs: texts.length, counts, total };
   });
   const totalDocs = classes.reduce((s, c) => s + c.docs, 0);
-  return { classes, vocabSize: vocab.size, totalDocs };
+  return { classes, vocab, vocabSize: vocab.size, totalDocs };
+}
+
+// 문장 속 조각 중 학습 데이터에 나온 "두 글자 이상" 조각의 수.
+// 0이면 모델이 근거 없이 찍은 결과라서 믿기 어렵다 (한 글자 조각은 "이", "다"처럼 아무 문장에나 나와서 뺀다)
+function knownPieces(m, text) {
+  return new Set(tokenize(text).filter(t => !t.startsWith('c:') && m.vocab.has(t))).size;
 }
 
 function predict(m, text) {
@@ -809,8 +859,11 @@ function runTest() {
   if (!text) { testInput.focus(); return; }
   const preds = predict(model, text);
   lastTest = text;
+  const unknown = knownPieces(model, text) === 0;
   resultEl.innerHTML =
     `<p class="result-top">결과 <b style="--cc: var(--c${preds[0].color})">${escapeHtml(preds[0].label)}</b></p>` +
+    (unknown ? `<p class="result-warn">이 문장에는 학습 데이터에 나온 조각(두 글자 이상)이 하나도 없어요.
+      그래서 이 결과는 근거 없이 고른 것이라 믿기 어려워요. 비슷한 예시 문장을 더 넣어 보세요.</p>` : '') +
     preds.map(p => `
       <div class="bar-row" style="--cc: var(--c${p.color})">
         <div class="bar-label">${escapeHtml(p.label)}</div>
@@ -820,6 +873,7 @@ function runTest() {
     `<p class="result-hint">“${escapeHtml(text)}”에 대한 클래스별 확률이에요.
       <button class="btn-text" data-why>왜 이렇게 판단했을까?</button></p>`;
   resultEl.querySelector('[data-why]').addEventListener('click', () => openHelp(true));
+  keepInView(testLabel); // 태블릿: 입력칸 바로 아래 결과가 키보드에 가리지 않게
   requestAnimationFrame(() => requestAnimationFrame(() => {
     resultEl.querySelectorAll('.bar > span').forEach((el, i) => el.style.transform = `scaleX(${preds[i].prob})`);
   }));
@@ -916,7 +970,16 @@ function showMsg(el, text, ok = true) {
   el.className = 'msg ' + (ok ? 'ok' : 'err');
 }
 
-// 같은 이름이 있으면 새 내용으로 바꾼다
+// 이미 있는 이름이면 "이름 (2)", "이름 (3)"… 중 비어 있는 이름을 돌려준다
+function freeName(name) {
+  const names = new Set(getModels().map(m => m.name));
+  if (!names.has(name)) return name;
+  let n = 2;
+  while (names.has(`${name} (${n})`)) n++;
+  return `${name} (${n})`;
+}
+
+// 같은 이름이 있으면 그 모델을 새 내용으로 바꾼다 (덮어쓸지는 부르는 쪽에서 먼저 확인)
 function saveModel(name, classes) {
   const list = getModels();
   const old = list.find(m => m.name === name);
@@ -927,11 +990,22 @@ function saveModel(name, classes) {
 
 const saveMsg = document.getElementById('saveMsg');
 document.getElementById('saveBtn').addEventListener('click', () => {
-  const name = modelNameEl.value.trim();
+  let name = modelNameEl.value.trim();
+  // 같은 컴퓨터를 여러 학생이 쓰면 기본 이름이 겹치기 쉬워서, 덮어쓰기 전에 꼭 묻는다
+  if (getModels().some(m => m.name === name)) {
+    const other = freeName(name);
+    const overwrite = confirm(`'${name}' 이름의 모델이 이미 있어요.\n\n` +
+      `[확인] 기존 모델을 지우고 덮어쓰기\n[취소] '${other}'(이)라는 새 이름으로 저장하기`);
+    if (!overwrite) {
+      name = other;
+      modelNameEl.value = name;
+      document.getElementById('modelTag').textContent = name;
+    }
+  }
   const result = saveModel(name, currentDataset);
   if (!result) return showMsg(saveMsg, '저장하지 못했어요. 브라우저 저장 공간을 확인해 주세요.', false);
   showMsg(saveMsg, (result === 'updated'
-    ? `'${name}'을(를) 새 내용으로 저장했어요. 캐릭터 체험에서 쓸 수 있어요.`
+    ? `'${name}'을(를) 새 내용으로 덮어썼어요. 캐릭터 체험에서 쓸 수 있어요.`
     : `'${name}'을(를) 저장했어요. 캐릭터 체험에서 쓸 수 있어요.`) + (store.persistent ? '' : NOT_PERSISTENT));
   renderSaved();
 });
@@ -991,12 +1065,19 @@ importInput.addEventListener('change', async () => {
   if (!file) return;
   try {
     const data = JSON.parse(await file.text());
-    const ok = data && typeof data.name === 'string' && Array.isArray(data.classes) && data.classes.length >= 2 &&
-      data.classes.every(c => typeof c.label === 'string' && Array.isArray(c.texts));
+    const ok = data && typeof data.name === 'string' && data.name.trim() &&
+      Array.isArray(data.classes) && data.classes.length >= 2 &&
+      data.classes.every(c => typeof c.label === 'string' && c.label.trim() &&
+        Array.isArray(c.texts) && c.texts.length && c.texts.every(t => typeof t === 'string'));
     if (!ok) throw new Error('format');
-    saveModel(data.name, data.classes);
+    // 불러온 파일은 기존 모델을 덮어쓰지 않고, 이름이 겹치면 새 이름으로 저장한다
+    const name = freeName(data.name.trim());
+    saveModel(name, data.classes.map(c => ({ label: c.label.trim(), texts: c.texts })));
     renderSaved();
-    showMsg(savedMsg, `'${data.name}' 모델을 불러와 저장했어요. 불러오기를 누르면 데이터를 고치고 다시 학습할 수 있어요.`);
+    showMsg(savedMsg, (name === data.name.trim()
+      ? `'${name}' 모델을 불러와 저장했어요.`
+      : `같은 이름의 모델이 있어서 '${name}'(으)로 저장했어요.`) +
+      ' 불러오기를 누르면 데이터를 고치고 다시 학습할 수 있어요.');
   } catch {
     showMsg(savedMsg, '이 파일은 모델 파일이 아니에요. "파일로 내보내기"로 만든 .json 파일을 골라 주세요.', false);
   }
@@ -1103,7 +1184,14 @@ function renderModelPick() {
   const list = getModels();
   document.getElementById('modelPick').hidden = !list.length;
   document.getElementById('noModel').hidden = !!list.length;
-  if (!list.find(m => m.id === char.modelId)) char.modelId = list[0] ? list[0].id : null;
+  if (!list.find(m => m.id === char.modelId)) {
+    // 쓰던 모델이 지워졌으면 다른 모델로 바꾸고, 바뀌었다는 걸 꼭 알려 준다
+    const lost = char.modelId !== null;
+    char.modelId = list[0] ? list[0].id : null;
+    if (lost && list.length) {
+      showMsg(setupMsg, `캐릭터가 쓰던 모델이 지워져서 '${list[0].name}'(으)로 바꿨어요. 아래 조건의 클래스를 확인해 주세요.`, false);
+    }
+  }
   modelSelect.innerHTML = '';
   for (const m of list) modelSelect.add(new Option(m.name, m.id, false, m.id === char.modelId));
   const m = selectedModel();
@@ -1124,10 +1212,12 @@ function renderRules() {
   const labels = m ? m.classes.map(c => c.label) : [];
   rulesEl.innerHTML = '';
   char.rules.forEach((r, i) => {
-    // 모델을 바꿔서 없어진 클래스는 첫 번째 클래스로 바꾼다
-    if (labels.length && !labels.includes(r.label)) r.label = labels[0];
+    // 새로 만든 빈 조건만 첫 번째 클래스로 채운다.
+    // 모델이 바뀌어 없어진 클래스는 몰래 바꾸지 않고 표시해서 학생이 다시 고르게 한다
+    if (labels.length && !r.label) r.label = labels[0];
+    const missing = labels.length > 0 && !labels.includes(r.label);
     const div = document.createElement('div');
-    div.className = 'rule';
+    div.className = 'rule' + (missing ? ' missing' : '');
     div.style.setProperty('--cc', labels.includes(r.label) ? `var(--c${labels.indexOf(r.label) % COLORS})` : 'var(--surface)');
     div.innerHTML = `
       <div class="rule-head"><span>조건 ${i + 1}</span><button aria-label="조건 ${i + 1} 삭제">삭제</button></div>
@@ -1138,6 +1228,13 @@ function renderRules() {
           <input type="text" class="r-answer" placeholder="예: 기분이 좋아 보여서 나도 신나!" aria-label="조건 ${i + 1}의 대답" autocomplete="off"></div>
       </div>`;
     const sel = div.querySelector('.r-label');
+    if (missing) {
+      sel.add(new Option(`${r.label} (없음)`, r.label, true, true));
+      const warn = document.createElement('p');
+      warn.className = 'rule-warn';
+      warn.textContent = `지금 모델에는 '${r.label}' 클래스가 없어요. 클래스를 다시 골라 주세요.`;
+      div.querySelector('.rule-body').prepend(warn);
+    }
     labels.forEach(l => sel.add(new Option(l, l, false, l === r.label)));
     const min = div.querySelector('.r-min');
     THRESHOLDS.forEach(t => min.add(new Option(t ? `${t}% 이상` : '상관없이', t, false, t === r.min)));
@@ -1205,9 +1302,12 @@ function say(html) {
 document.getElementById('startBtn').addEventListener('click', () => {
   const m = selectedModel();
   const blankIdx = char.rules.findIndex(r => !r.answer.trim());
+  const missingIdx = m ? char.rules.findIndex(r => !m.classes.some(c => c.label === r.label)) : -1;
   const [error, focusEl] =
     !m ? ['분류에 쓸 모델이 없어요. 먼저 모델을 저장해 주세요.', document.getElementById('goMake')] :
     !char.rules.length ? ['조건을 1개 이상 만들어 주세요.', document.getElementById('addRule')] :
+    missingIdx >= 0 ? [`조건 ${missingIdx + 1}의 클래스 '${char.rules[missingIdx].label}'이(가) 지금 모델에 없어요. 다시 골라 주세요.`,
+      rulesEl.children[missingIdx].querySelector('.r-label')] :
     blankIdx >= 0 ? [`조건 ${blankIdx + 1}의 대답이 비어 있어요.`, rulesEl.children[blankIdx].querySelector('.r-answer')] :
     !char.fallback.trim() ? ['조건에 맞지 않을 때 할 대답을 적어 주세요.', fallbackEl] :
     [null, null];
@@ -1246,13 +1346,15 @@ async function talk() {
   say('<span class="dots" aria-label="분류하는 중"><i></i><i></i><i></i></span>');
   const top = predict(playModel, text)[0];
   const pct = (top.prob * 100).toFixed(1);
+  const unknown = knownPieces(playModel, text) === 0;
   await sleep(800);
-  clsLine.innerHTML = `분류 결과: <span class="tk" style="--cc: var(--c${top.color})">${escapeHtml(top.label)} ${pct}%</span>`;
+  clsLine.innerHTML = `분류 결과: <span class="tk" style="--cc: var(--c${top.color})">${escapeHtml(top.label)} ${pct}%</span>` +
+    (unknown ? ' <span class="unknown">아는 조각이 없어서 믿기 어려워요</span>' : '');
   await sleep(400);
 
-  // 3. 대답하기: 위에서부터 처음 맞는 조건
+  // 3. 대답하기: 위에서부터 처음 맞는 조건. 모델이 아는 조각이 없으면 조건을 보지 않고 "맞지 않을 때" 대답
   setPipeline(2);
-  const idx = char.rules.findIndex(r => r.label === top.label && top.prob * 100 >= r.min);
+  const idx = unknown ? -1 : char.rules.findIndex(r => r.label === top.label && top.prob * 100 >= r.min);
   const answer = (idx >= 0 ? char.rules[idx].answer : char.fallback)
     .replaceAll('{결과}', top.label).replaceAll('{확률}', pct + '%');
   say(escapeHtml(answer));
@@ -1270,7 +1372,8 @@ async function talk() {
     <div class="reply"><span class="avatar sm"></span><span class="ans"></span></div>`;
   li.querySelector('.me').textContent = `나: ${text}`;
   li.querySelector('.tk').textContent = `${top.label} ${pct}%`;
-  li.querySelector('.rule-hit').textContent = idx >= 0 ? `조건 ${idx + 1}에 맞아요` : '맞는 조건이 없어요';
+  li.querySelector('.rule-hit').textContent = unknown ? '모델이 아는 조각이 없어서 "맞지 않을 때" 대답을 했어요'
+    : idx >= 0 ? `조건 ${idx + 1}에 맞아요` : '맞는 조건이 없어요';
   renderAvatar(li.querySelector('.avatar'));
   li.querySelector('.ans').textContent = answer;
   logEl.prepend(li);
@@ -1286,6 +1389,31 @@ document.getElementById('editChar').addEventListener('click', openSetup);
 document.getElementById('clearLog').addEventListener('click', () => {
   logEl.innerHTML = '<li class="log-empty" style="border:none;background:none;padding:0">아직 대화가 없어요.</li>';
 });
+
+// ----- 태블릿: 화면 키보드가 올라와도 입력칸과 결과(말풍선)가 같이 보이게 -----
+const isTouch = matchMedia('(pointer: coarse)');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const stage = document.querySelector('.stage');
+const testLabel = document.querySelector('label[for="testInput"]');
+
+// 키보드가 올라오는 애니메이션(약 0.3초)이 끝난 뒤 위치를 맞춘다
+function keepInView(el) {
+  if (!isTouch.matches) return;
+  setTimeout(() => el.scrollIntoView({ block: 'start', behavior: reduceMotion.matches ? 'auto' : 'smooth' }), 350);
+}
+function anchorFor(active) {
+  return active === talkInput ? stage : active === testInput ? testLabel : null;
+}
+
+talkInput.addEventListener('focus', () => keepInView(stage));
+testInput.addEventListener('focus', () => keepInView(testLabel));
+// 키보드가 열리고 닫히며 보이는 영역이 바뀔 때도 다시 맞춘다
+if (window.visualViewport) {
+  visualViewport.addEventListener('resize', () => {
+    const anchor = anchorFor(document.activeElement);
+    if (anchor) keepInView(anchor);
+  });
+}
 
 renderSaved();
 go(1);
